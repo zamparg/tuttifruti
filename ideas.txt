@@ -1,0 +1,33 @@
+    Falta agregar boton de otra Jugada, terminar juego. 
+    Tachar si la palabra no fue válida. 
+
+
+FALTA:
+    - DAR UN TIEMPO PARA ACEPTAR EL ALERT, O SE ACEPTA AUTOMATICAMENTE
+    - UNA LISTA DE OPCIONES PARA LA JUGADA DE MAQUINA
+
+
+
+
+    linea jugador 1 - Listo!
+    Linea Jugador 2 - Agregar Líneas
+
+NO VA EN UNA FUNCION
+
+CON SUBMIT, JUGAR CON OTRA LETRA.... 
+Eliminar el do...while... Se hace AUTOMATICAMENTE con los botones...
+
+
+    Dos botones. Desea Jugar con otra letra? 
+
+LOCALSTORAGE
+Guardar puntuaciones y todo el asunto. 
+
+PREGUNTAS
+
+
+A través de una función agregué una porción de código con .innerHTML que incluye un botón (con un ID). 
+tengo que agregar un eventListener. Si lo hago por fuera de la función, el evento me tira error porque no está declarado cuando carga la página... Sí lo hago dentro de la funcion, no funciona. 
+
+
+Usé preventDefault para un submit... Si le hago click una vez funciona... Pero si le hago click otra vez aplica el default...

@@ -1,0 +1,119 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat&family=Caveat+Brush&display=swap');
+
+$colorLineas: #a0bcd6 ;
+$colorFondo: #ecf1f6;
+$colorMargen: #d6a0bc;
+
+
+*{
+    margin: 0;
+    padding: 0;
+}
+html{
+    height: 100%;
+}
+body{
+    background-color: $colorFondo;
+    height: 100%;
+}
+footer{
+    height: 25vh;
+}
+div{
+    align-content: center;
+}
+// Textos
+
+h1{
+    font-family: 'Caveat Brush', cursive;
+    color: $colorMargen;
+}
+h2{
+    font-family: 'Caveat Brush', cursive;
+}
+.jugador1{
+    font-family: 'Caveat Brush', cursive;
+    color: $colorMargen;
+}
+.jugador2{
+    font-family: 'Caveat Brush', cursive;
+    color: $colorLineas;
+}
+p{
+    font-family: 'Caveat Brush', cursive;
+    font-size: 20px;
+    text-transform: capitalize;
+}
+
+
+// Margenes
+.margenSuperior{
+    height: 75px;
+    border-bottom: 2px solid $colorLineas;
+}
+.renglon{
+    border-bottom: 2px solid $colorLineas;
+    height: 45px;
+}
+.renglonFinal{
+    height:100%;
+}
+.margenIzquierdo{
+    height: 100%;
+    border-right: 7px double $colorMargen;
+}
+.margenIzquierdoFooter{
+    border-right: 7px double $colorMargen;
+    height: 100%;
+}
+.lineaDivisoria{
+    border-right: 2px solid #bcbcbc;
+}
+
+.espacio{
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding:0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+input{
+    border-width: 2px;
+    border-color: #a0bcd6;
+    border-style: solid;
+    border-radius: 10px;
+
+}
+.espacioInput{
+    padding: 0;
+    margin: 0;
+    width: 95%;
+
+}
+
+.boton1{
+    font-family: 'Caveat Brush', cursive;
+    font-size: 20px;
+    text-transform: capitalize;
+    width: 80%;
+    height: 40px;
+    border-radius: 15px;
+    background-color: $colorMargen;
+}
+
+.boton2{
+    font-family: 'Caveat Brush', cursive;
+    font-size: 20px;
+    text-transform: capitalize;
+    width: 80%;
+    height: 40px;
+    border-radius: 15px;
+    background-color: $colorLineas;
+}
+
+input:disabled{
+    background: $colorLineas;
+}
