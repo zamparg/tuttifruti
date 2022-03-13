@@ -29,7 +29,7 @@ const repetido = 5;
 const nada = 0;
 
 // CONSTRUCTORES
-class jugadaJugador{
+class JugadaJugador{
     constructor (nombres,animales,colores, lugares,comidas, objetos){
         this.nombres= nombres;
         this.animales=animales;
@@ -57,7 +57,7 @@ espacioJugador2.innerHTML = `
 // BOTONES
 
 let botones = `
-<div class="renglon container-fluid row text-center">
+<div class="renglon container-fluid row text-center" id="renglonBotones">
     <div class="col-1 margenIzquierdo">
     </div>
     <div class="col">
@@ -236,7 +236,7 @@ function recordar(){
     console.log(`Jugadas con empate`)
     console.log(jugadasEmpatadas)
 
-    alert("¡Gracias por jugar! \n En la consola pueden ver las mejores jugadas de cada Jugador")
+    //alert("¡Gracias por jugar! \n En la consola pueden ver las mejores jugadas de cada Jugador")
 }
 
 function preguntar (){
@@ -246,12 +246,14 @@ function preguntar (){
     let btnTerminar = document.getElementById("btnTerminar")
     
     btnSeguir.onclick = () => {
-        elegirLetra();
+        jugar();
         for (let input of  document.getElementsByClassName("espacioInput1")) {
             input.removeAttribute("disabled");
           }
         puntosJugador1=0
         puntosJugador2=0
+        cuaderno.removeChild(cuaderno.lastChild)
+       
     }
 
     btnTerminar.onclick = () =>{
@@ -264,79 +266,95 @@ function preguntar (){
             alert(`¡Este juego ha resultado en un empate, señoras y señores! ¡Con ${puntosTotalesJugador1} puntos cada uno! `)
         }
         recordar()
+        
     }
 
 }
 
 // JUGADA
 
-elegirLetra()
-for (let input of  document.getElementsByClassName("espacioInput2")) {
-    input.setAttribute("disabled", "disabled");
-  }
-
-let formulario = document.getElementById("formulario1");
-let datos1 = document.getElementById("recibidorDeDatos1");
-let datos2= document.getElementById("recibidorDeDatos2");
-
-datos1.addEventListener("submit", recibiendoDatos1)
-datos2.addEventListener("submit", recibiendoDatos2);
-
-function recibiendoDatos1 (e) {
-    e.preventDefault();
-
-    nombres1 = document.getElementById('espacioNombres1').value; 
-    animales1 = document.getElementById('espacioAnimales1').value;
-    colores1 = document.getElementById('espacioColores1').value;
-    lugares1 = document.getElementById('espacioLugares1').value;
-    comidas1 = document.getElementById('espacioComidas1').value;
-    objetos1 =document.getElementById('espacioObjetos1').value;
-
-    datos1.reset();
-    for (let input of  document.getElementsByClassName("espacioInput1")) {
-        input.setAttribute("disabled", "disabled");
-      }
-    for (let input of  document.getElementsByClassName("espacioInput2")) {
-        input.removeAttribute("disabled");
-      }
-    
-    
-}
-
-function recibiendoDatos2 (e){
-    e.preventDefault ();
-
-    nombres2 = document.getElementById('espacioNombres2').value; 
-    animales2 = document.getElementById('espacioAnimales2').value;
-    colores2 = document.getElementById('espacioColores2').value;
-    lugares2 = document.getElementById('espacioLugares2').value;
-    comidas2 = document.getElementById('espacioComidas2').value;
-    objetos2 =document.getElementById('espacioObjetos2').value;
-
-    calculoDePuntos(nombres1,nombres2)
-    calculoDePuntos(animales1,animales2)
-    calculoDePuntos(colores1,colores2)
-    calculoDePuntos(lugares1,lugares2)
-    calculoDePuntos(comidas1,comidas2)
-    calculoDePuntos(objetos1,objetos2)
-
-    puntosTotalesJugador1 +=puntosJugador1;
-    puntosTotalesJugador2 += puntosJugador2;
-
-    let jugadaJugador1 = new jugadaJugador(nombres1, animales1, colores1, lugares1, comidas1, objetos1)
-    let jugadaJugador2 = new jugadaJugador(nombres2, animales2, colores2, lugares2, comidas2, objetos2)
-    let jugada = {letra:letra, jugadaJugador1:jugadaJugador1, puntosJugador1:puntosJugador1, puntosTotalesJugador1:puntosTotalesJugador1, jugadaJugador2:jugadaJugador2, puntosJugador2:puntosJugador2,puntosTotalesJugador2:puntosTotalesJugador2}
-    
-    jugadas.push(jugada)
-    console.log(jugadas)
-
-    datos2.reset();
+function jugar (){ 
+    elegirLetra()
     for (let input of  document.getElementsByClassName("espacioInput2")) {
         input.setAttribute("disabled", "disabled");
     }
-    
-    escribirJugada();
-    preguntar();
+
+    let formulario = document.getElementById("formulario1");
+    let datos1 = document.getElementById("recibidorDeDatos1");
+    let datos2= document.getElementById("recibidorDeDatos2");
+
+    datos1.addEventListener("submit", recibiendoDatos1)
+    datos2.addEventListener("submit", recibiendoDatos2);
+
+    function recibiendoDatos1 (e) {
+        e.preventDefault();
+
+        nombres1 = document.getElementById('espacioNombres1').value; 
+        animales1 = document.getElementById('espacioAnimales1').value;
+        colores1 = document.getElementById('espacioColores1').value;
+        lugares1 = document.getElementById('espacioLugares1').value;
+        comidas1 = document.getElementById('espacioComidas1').value;
+        objetos1 =document.getElementById('espacioObjetos1').value;
+
+        datos1.reset();
+        for (let input of  document.getElementsByClassName("espacioInput1")) {
+            input.setAttribute("disabled", "disabled");
+        }
+        for (let input of  document.getElementsByClassName("espacioInput2")) {
+            input.removeAttribute("disabled");
+        }
+        
+        
+    }
+
+    function recibiendoDatos2 (e){
+        e.preventDefault ();
+
+        nombres2 = document.getElementById('espacioNombres2').value; 
+        animales2 = document.getElementById('espacioAnimales2').value;
+        colores2 = document.getElementById('espacioColores2').value;
+        lugares2 = document.getElementById('espacioLugares2').value;
+        comidas2 = document.getElementById('espacioComidas2').value;
+        objetos2 =document.getElementById('espacioObjetos2').value;
+
+        calculoDePuntos(nombres1,nombres2)
+        calculoDePuntos(animales1,animales2)
+        calculoDePuntos(colores1,colores2)
+        calculoDePuntos(lugares1,lugares2)
+        calculoDePuntos(comidas1,comidas2)
+        calculoDePuntos(objetos1,objetos2)
+
+        puntosTotalesJugador1 +=puntosJugador1;
+        puntosTotalesJugador2 += puntosJugador2;
+
+        let jugadaJugador1 = new JugadaJugador(nombres1, animales1, colores1, lugares1, comidas1, objetos1)
+        let jugadaJugador2 = new JugadaJugador(nombres2, animales2, colores2, lugares2, comidas2, objetos2)
+        let jugada = {letra:letra, jugadaJugador1:jugadaJugador1, puntosJugador1:puntosJugador1, puntosTotalesJugador1:puntosTotalesJugador1, jugadaJugador2:jugadaJugador2, puntosJugador2:puntosJugador2,puntosTotalesJugador2:puntosTotalesJugador2}
+        
+        jugadas.push(jugada)
+        console.log(jugadas)
+
+        datos2.reset();
+        for (let input of  document.getElementsByClassName("espacioInput2")) {
+            input.setAttribute("disabled", "disabled");
+        }
+        
+        escribirJugada();
+        preguntar();
+    }
 }
 
+jugar();
+
+/*
+BOTON DE SEGUIR JUGANDO ABAJO DE FORM. 
+
+
+Si no, que se ihnabiliten ambos inputs. 
+
+Guardar en local los puntos totales de cada jugador y cantidad de jugadas. Ordenar por promedio.
+Ponerlos en el Margen inferior. 
+
+Que los puntos de cada jugada, aparezcan en el DOM. 
+*/
 
