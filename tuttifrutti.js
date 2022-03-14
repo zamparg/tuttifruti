@@ -36,6 +36,7 @@ let espacioJugador1 = document.getElementById("espacioJugador1")
 let espacioJugador2 = document.getElementById("espacioJugador2")
 let renglones = document.getElementById("renglones")
 let renglonGanador = document.getElementById("renglonGanador")
+let margenInferior = document.getElementById("margenInferior")
 
 espacioJugador1.innerHTML = `
     <p class ="jugador1">${jugador1}</p> 
@@ -47,16 +48,27 @@ espacioJugador2.innerHTML = `
 // BOTONES
 
 let botones = `
-<div class="renglon container-fluid row text-center" id="renglonBotones">
-    <div class="col-1 margenIzquierdo">
+    <div class="renglon container-fluid row text-center" id="renglonBotones">
+        <div class="col-1 margenIzquierdo">
+        </div>
+        <div class="col">
+            <button class="boton1" id="btnSeguir">Seguir Jugando</button>
+        </div>
+        <div class="col">
+            <button class="boton2" id="btnTerminar">Terminar partida</button>
+        </div>
+    </div>`
+
+let botonesFinales = `
+    <div class ="row">
+        <div class="col">
+            <button class="boton1" id="btnRanking">Ver Ranking</button>
+        </div>
+        <div class="col">
+            <button class="boton2" id="btnReset">Volver a Jugar</button>
+        </div>
     </div>
-    <div class="col">
-        <button class="boton1" id="btnSeguir">Seguir Jugando</button>
-    </div>
-    <div class="col">
-        <button class="boton2" id="btnTerminar">Terminar partida</button>
-    </div>
-</div>`
+    `
 
 // MEJORES JUGADORES
 let mejoresJugadores=[];
@@ -113,18 +125,6 @@ function calculoDePuntos (elemento1,elemento2){
     }
 }
 
-function ganador (){
-    alert ("Y el GANADOR ES...")
-    if (puntosJugador1 > puntosJugador2){
-        alert(`¡${jugador1}! ¡Con ${puntosJugador1} puntos!`);
-    }else if (puntosJugador1 < puntosJugador2){
-        alert(`¡${jugador2}! ¡Con ${puntosJugador2} puntos!`);
-    }else {
-        alert(`¡Es un empate, señoras y señores! ¡Con ${puntosJugador1} puntos! `)
-    }
-    puntosTotalesJugador1+=puntosJugador1
-    puntosTotalesJugador2+=puntosJugador2
-}
 
 function escribirJugada(){
     renglones.innerHTML += `
@@ -250,12 +250,12 @@ function preguntar (){
         puntosJugador1=0
         puntosJugador2=0
         cuaderno.removeChild(cuaderno.lastChild)
-       
     }
 
     btnTerminar.onclick = () =>{
         escribirPuntos();
         let mejorJugador = {}
+        cuaderno.removeChild(cuaderno.lastChild)
 
         if (puntosTotalesJugador1 > puntosTotalesJugador2){
             renglonGanador.innerHTML=`
@@ -279,6 +279,7 @@ function preguntar (){
         }
 
         localStorage.setItem("mejoresJugadores", JSON.stringify(mejoresJugadores));
+        renglonGanador.innerHTML += botonesFinales
         recordar();
         
     }
@@ -286,6 +287,7 @@ function preguntar (){
 
 function jugar (){ 
     elegirLetra()
+
     for (let input of  document.getElementsByClassName("espacioInput2")) {
         input.setAttribute("disabled", "disabled");
     }

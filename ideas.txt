@@ -36,3 +36,5 @@ ordenar por promedio. mayor a menor.
 
 
 BOTON DE VER RANKIN
+
+NOMBRE DE JUGADOR 1 y 2... Session storage. 
