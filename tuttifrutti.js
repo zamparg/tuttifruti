@@ -10,6 +10,7 @@ let comidas1
 let objetos1
 let puntosJugador1=0
 let puntosTotalesJugador1=0
+let cantidadDeJugadas=0
 
 // JUGADA DEL USUARIO2 (LUEGO PUEDE SER UNA LISTA, PARA JUGAR CONTRA LA PC)
 let jugador2= prompt("¿Cuál es el nombre del Jugador 2?")    
@@ -28,24 +29,14 @@ const bien = 10;
 const repetido = 5;
 const nada = 0;
 
-// CONSTRUCTORES
-class JugadaJugador{
-    constructor (nombres,animales,colores, lugares,comidas, objetos){
-        this.nombres= nombres;
-        this.animales=animales;
-        this.colores= colores;
-        this.lugares=lugares;
-        this.comidas=comidas;
-        this.objetos=objetos;
-    }
-}
-
 // ELEMENTOS DEL DOM
 let cuaderno = document.getElementById("cuaderno");
 let puntajeTotal1 = document.getElementById("puntosJugador1")
 let puntajeTotal2 = document.getElementById("puntosJugador2")
 let espacioJugador1 = document.getElementById("espacioJugador1")
 let espacioJugador2 = document.getElementById("espacioJugador2")
+let renglones = document.getElementById("renglones")
+let renglonGanador = document.getElementById("renglonGanador")
 
 espacioJugador1.innerHTML = `
     <p class ="jugador1">${jugador1}</p> 
@@ -128,7 +119,7 @@ function ganador (){
 }
 
 function escribirJugada(){
-    cuaderno.innerHTML += `
+    renglones.innerHTML += `
         <div class="renglon container-fluid row text-center">
             <div class="col-1 margenIzquierdo">
             <p class="jugador1">${jugador1}:</p>
@@ -258,20 +249,28 @@ function preguntar (){
 
     btnTerminar.onclick = () =>{
         escribirPuntos();
+
         if (puntosTotalesJugador1 > puntosTotalesJugador2){
-            alert(`¡El ganador de toda la partida es ${jugador1}! ¡Con ${puntosTotalesJugador1} puntos!`);
+            renglonGanador.innerHTML=`
+            <h3 class="jugador1">
+            ¡El ganador de toda la partida es ${jugador1}! ¡Con ${puntosTotalesJugador1} puntos!
+            </h3>`
+
         }else if (puntosTotalesJugador1 < puntosTotalesJugador2){
-            alert(`¡El ganador de toda la partida es ${jugador2}! ¡Con ${puntosTotalesJugador2} puntos!`);
+            renglonGanador.innerHTML=`
+            <h3 class="jugador2">
+            ¡El ganador de toda la partida es ${jugador2}! ¡Con ${puntosTotalesJugador2} puntos!
+            </h3>`
         }else {
-            alert(`¡Este juego ha resultado en un empate, señoras y señores! ¡Con ${puntosTotalesJugador1} puntos cada uno! `)
+            renglonGanador.innerHTML=`
+            <h3>
+            ¡Este juego ha resultado en un empate, señoras y señores! ¡Con ${puntosTotalesJugador1} puntos cada uno!
+            </h3>`
         }
         recordar()
         
     }
-
 }
-
-// JUGADA
 
 function jugar (){ 
     elegirLetra()
@@ -297,6 +296,7 @@ function jugar (){
         objetos1 =document.getElementById('espacioObjetos1').value;
 
         datos1.reset();
+
         for (let input of  document.getElementsByClassName("espacioInput1")) {
             input.setAttribute("disabled", "disabled");
         }
@@ -329,7 +329,7 @@ function jugar (){
 
         let jugadaJugador1 = new JugadaJugador(nombres1, animales1, colores1, lugares1, comidas1, objetos1)
         let jugadaJugador2 = new JugadaJugador(nombres2, animales2, colores2, lugares2, comidas2, objetos2)
-        let jugada = {letra:letra, jugadaJugador1:jugadaJugador1, puntosJugador1:puntosJugador1, puntosTotalesJugador1:puntosTotalesJugador1, jugadaJugador2:jugadaJugador2, puntosJugador2:puntosJugador2,puntosTotalesJugador2:puntosTotalesJugador2}
+        let jugada = new Jugada (letra, jugadaJugador1, puntosJugador1, puntosTotalesJugador1, jugadaJugador2, puntosJugador2,puntosTotalesJugador2);
         
         jugadas.push(jugada)
         console.log(jugadas)
@@ -344,17 +344,17 @@ function jugar (){
     }
 }
 
+// JUGADA
+
 jugar();
 
+
 /*
-BOTON DE SEGUIR JUGANDO ABAJO DE FORM. 
 
-
-Si no, que se ihnabiliten ambos inputs. 
-
-Guardar en local los puntos totales de cada jugador y cantidad de jugadas. Ordenar por promedio.
+Guardar en local los puntos totales de cada jugador y cantidad de jugadas (jugadas.length). Ordenar por promedio.
 Ponerlos en el Margen inferior. 
 
 Que los puntos de cada jugada, aparezcan en el DOM. 
+
 */
 

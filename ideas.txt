@@ -23,11 +23,20 @@ Eliminar el do...while... Se hace AUTOMATICAMENTE con los botones...
 LOCALSTORAGE
 Guardar puntuaciones y todo el asunto. 
 
-PREGUNTAS
+MEJORES JUGADORES
+RANKIN
+ - Nombre 
+ - cantidad de puntos
+ - Cantidad de jugadas (jugadas.length)
+ - promedio
+ 
+ordenar por promedio. mayor a menor. 
 
 
-A través de una función agregué una porción de código con .innerHTML que incluye un botón (con un ID). 
-tengo que agregar un eventListener. Si lo hago por fuera de la función, el evento me tira error porque no está declarado cuando carga la página... Sí lo hago dentro de la funcion, no funciona. 
+let mejoresJugadores=[];
 
-
-Usé preventDefault para un submit... Si le hago click una vez funciona... Pero si le hago click otra vez aplica el default...
+if(localStorage.getItem("mejoresJugadores")){
+    mejoresJugadores=JSON.parse(localStorage.getItem(mejoresJugadores));
+} else {
+    localStorage.setItem("mejoresJugadores", JSON.stringify(mejoresJugadores))
+}
