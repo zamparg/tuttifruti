@@ -10,7 +10,6 @@ let comidas1
 let objetos1
 let puntosJugador1=0
 let puntosTotalesJugador1=0
-let cantidadDeJugadas=0
 
 // JUGADA DEL USUARIO2 (LUEGO PUEDE SER UNA LISTA, PARA JUGAR CONTRA LA PC)
 let jugador2= prompt("¿Cuál es el nombre del Jugador 2?")    
@@ -58,6 +57,15 @@ let botones = `
         <button class="boton2" id="btnTerminar">Terminar partida</button>
     </div>
 </div>`
+
+// MEJORES JUGADORES
+let mejoresJugadores=[];
+
+if(localStorage.getItem("mejoresJugadores")){
+    mejoresJugadores=JSON.parse(localStorage.getItem(mejoresJugadores));
+} else {
+    localStorage.setItem("mejoresJugadores", JSON.stringify(mejoresJugadores))
+}
 
 
 // FUNCIONES
@@ -226,8 +234,6 @@ function recordar(){
     console.log(mejoresJugadas2)
     console.log(`Jugadas con empate`)
     console.log(jugadasEmpatadas)
-
-    //alert("¡Gracias por jugar! \n En la consola pueden ver las mejores jugadas de cada Jugador")
 }
 
 function preguntar (){
@@ -249,25 +255,31 @@ function preguntar (){
 
     btnTerminar.onclick = () =>{
         escribirPuntos();
+        let mejorJugador = {}
 
         if (puntosTotalesJugador1 > puntosTotalesJugador2){
             renglonGanador.innerHTML=`
             <h3 class="jugador1">
             ¡El ganador de toda la partida es ${jugador1}! ¡Con ${puntosTotalesJugador1} puntos!
             </h3>`
-
+            mejorJugador={ nombre: jugador1, puntos: puntosTotalesJugador1,jugadas: jugadas.length, promedio:(puntosTotalesJugador1/jugadas.length)};
+            mejoresJugadores.push(mejorJugador)
         }else if (puntosTotalesJugador1 < puntosTotalesJugador2){
             renglonGanador.innerHTML=`
             <h3 class="jugador2">
             ¡El ganador de toda la partida es ${jugador2}! ¡Con ${puntosTotalesJugador2} puntos!
             </h3>`
+            mejorJugador={ nombre: jugador2, puntos: puntosTotalesJugador2,jugadas: jugadas.length, promedio:(puntosTotalesJugador1/jugadas.length)};
+            mejoresJugadores.push(mejorJugador)
         }else {
             renglonGanador.innerHTML=`
             <h3>
             ¡Este juego ha resultado en un empate, señoras y señores! ¡Con ${puntosTotalesJugador1} puntos cada uno!
             </h3>`
         }
-        recordar()
+
+        localStorage.setItem("mejoresJugadores", JSON.stringify(mejoresJugadores));
+        recordar();
         
     }
 }
@@ -278,7 +290,6 @@ function jugar (){
         input.setAttribute("disabled", "disabled");
     }
 
-    let formulario = document.getElementById("formulario1");
     let datos1 = document.getElementById("recibidorDeDatos1");
     let datos2= document.getElementById("recibidorDeDatos2");
 
@@ -302,9 +313,7 @@ function jugar (){
         }
         for (let input of  document.getElementsByClassName("espacioInput2")) {
             input.removeAttribute("disabled");
-        }
-        
-        
+        }        
     }
 
     function recibiendoDatos2 (e){
@@ -332,7 +341,7 @@ function jugar (){
         let jugada = new Jugada (letra, jugadaJugador1, puntosJugador1, puntosTotalesJugador1, jugadaJugador2, puntosJugador2,puntosTotalesJugador2);
         
         jugadas.push(jugada)
-        console.log(jugadas)
+        //console.log(jugadas)
 
         datos2.reset();
         for (let input of  document.getElementsByClassName("espacioInput2")) {

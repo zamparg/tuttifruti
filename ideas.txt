@@ -33,10 +33,6 @@ RANKIN
 ordenar por promedio. mayor a menor. 
 
 
-let mejoresJugadores=[];
 
-if(localStorage.getItem("mejoresJugadores")){
-    mejoresJugadores=JSON.parse(localStorage.getItem(mejoresJugadores));
-} else {
-    localStorage.setItem("mejoresJugadores", JSON.stringify(mejoresJugadores))
-}
+
+BOTON DE VER RANKIN
