@@ -63,7 +63,7 @@ let botonesFinales = `
             <button class="boton1" id="btnRanking">Ver Ranking</button>
         </div>
         <div class="col">
-            <a href="index.html"><button class="boton2" id="btnReset">Volver a Jugar</button></a>
+            <a href="../index.html"><button class="boton2" id="btnReset">Volver a Jugar</button></a>
         </div>
     </div>`
 
@@ -71,7 +71,7 @@ let botonVolverAJugar = `
     <div class="container-fluid row renglonFinal text-center">
         <div class="col-1 margenIzquierdo footer"></div>
         <div class="col">
-            <a href="index.html"><button class="boton3">Volver a Jugar</button> </a>
+            <a href="../index.html"><button class="boton3">Volver a Jugar</button> </a>
         </div>
     </div>`
 
