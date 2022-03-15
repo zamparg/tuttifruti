@@ -22,3 +22,12 @@ class Jugada {
         this.puntosTotalesJugador2=puntosTotalesJugador2;
     }
 } 
+
+class JugadorRankin {
+    constructor (nombre, puntos, cantJugadas, promedio){
+        this.nombre = nombre;
+        this.puntos= puntos;
+        this.cantJugadas=cantJugadas;
+        this.promedio=promedio;
+    }
+}

@@ -66,10 +66,7 @@ p{
     height: 100%;
     border-right: 7px double $colorMargen;
 }
-.margenIzquierdoFooter{
-    border-right: 7px double $colorMargen;
-    height: 100%;
-}
+
 .lineaDivisoria{
     border-right: 2px solid #bcbcbc;
 }
@@ -115,6 +112,17 @@ input{
     height: 40px;
     border-radius: 15px;
     background-color: $colorLineas;
+}
+
+.boton3{
+    font-family: 'Caveat Brush', cursive;
+    font-size: 20px;
+    text-transform: capitalize;
+    width: 50%;
+    height: 40px;
+    border-radius: 15px;
+    background-color: $colorLineas;
+    margin-top: 10px;
 }
 
 input:disabled{

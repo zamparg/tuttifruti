@@ -70,11 +70,6 @@ p {
   border-right: 7px double #d6a0bc;
 }
 
-.margenIzquierdoFooter {
-  border-right: 7px double #d6a0bc;
-  height: 100%;
-}
-
 .lineaDivisoria {
   border-right: 2px solid #bcbcbc;
 }
@@ -126,6 +121,17 @@ input {
   height: 40px;
   border-radius: 15px;
   background-color: #a0bcd6;
+}
+
+.boton3 {
+  font-family: 'Caveat Brush', cursive;
+  font-size: 20px;
+  text-transform: capitalize;
+  width: 50%;
+  height: 40px;
+  border-radius: 15px;
+  background-color: #a0bcd6;
+  margin-top: 10px;
 }
 
 input:disabled {

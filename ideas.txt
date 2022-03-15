@@ -37,4 +37,24 @@ ordenar por promedio. mayor a menor.
 
 BOTON DE VER RANKIN
 
-NOMBRE DE JUGADOR 1 y 2... Session storage. 
+NOMBRE DE JUGADOR 1 y 2... Session storage. Cuando inicia, reinicia session. 
+
+
+            for (let indice = 0; indice <= 9; indice++){
+                cuaderno.innerHTML+=`
+                <div class="renglon container-fluid row text-center">
+                    <div class="col-1 margenIzquierdo">
+                        <h3>${indice+1}<h3>
+                    </div>
+                    <div class="col">
+                        <h3>${mejoresJugadores[indice].nombre}</h3>
+                    </div>
+                    <div class="col">
+                        <h3>${mejoresJugadores[indice].puntos}</h3>
+                    </div>
+                    <div class="col">
+                        <h3>${mejoresJugadores[indice].jugadas}</h3>
+                    </div>
+                </div> 
+                `
+            }

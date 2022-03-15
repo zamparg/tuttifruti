@@ -39,11 +39,9 @@ let renglonGanador = document.getElementById("renglonGanador")
 let margenInferior = document.getElementById("margenInferior")
 
 espacioJugador1.innerHTML = `
-    <p class ="jugador1">${jugador1}</p> 
-`
+    <p class ="jugador1">${jugador1}</p>`
 espacioJugador2.innerHTML = `
-    <p class ="jugador2">${jugador2}</p> 
-`
+    <p class ="jugador2">${jugador2}</p>`
 
 // BOTONES
 
@@ -65,18 +63,26 @@ let botonesFinales = `
             <button class="boton1" id="btnRanking">Ver Ranking</button>
         </div>
         <div class="col">
-            <button class="boton2" id="btnReset">Volver a Jugar</button>
+            <a href="."><button class="boton2" id="btnReset">Volver a Jugar</button></a>
         </div>
-    </div>
-    `
+    </div>`
+
+let botonVolverAJugar = `
+    <div class="container-fluid row renglonFinal text-center">
+        <div class="col-1 margenIzquierdo footer"></div>
+        <div class="col">
+            <a href="."><button class="boton3">Volver a Jugar</button> </a>
+        </div>
+    </div>`
 
 // MEJORES JUGADORES
-let mejoresJugadores=[];
 
-if(localStorage.getItem("mejoresJugadores")){
-    mejoresJugadores=JSON.parse(localStorage.getItem(mejoresJugadores));
+let mejoresJugadores = [ ];
+
+if(localStorage.getItem("mejoresJugadores"))    {
+    mejoresJugadores = JSON.parse(localStorage.getItem(`mejoresJugadores`));
 } else {
-    localStorage.setItem("mejoresJugadores", JSON.stringify(mejoresJugadores))
+    localStorage.setItem(`mejoresJugadores`, JSON.stringify(mejoresJugadores))
 }
 
 
@@ -105,26 +111,20 @@ function calculoDePuntos (elemento1,elemento2){
     if (elemento1==elemento2 && elemento1!="" && elemento1[0]===letra){
         puntosJugador1+=repetido;
         puntosJugador2+=repetido;
-        //alert(`¡Han puesto el mismo elemento!"${elemento1}"  5 puntos para cada uno`)
     } else if (elemento1!="" && elemento2!="" && elemento1[0]===letra && elemento2[0]===letra){
         puntosJugador1+=bien;
         puntosJugador2+=bien;
-        //alert(`${jugador1} escribió "${elemento1}" y ${jugador2} escribió "${elemento2}". ¡10 puntos para cada uno!`)
     } else if ((elemento2!="" && elemento2[0]===letra) && (elemento1=="" || elemento1[0]!=letra)){
         puntosJugador1+=nada;
         puntosJugador2+=perfecto;
-        //alert(`¡${jugador1} no escribió nada o no era válido! \n ¡20 puntos para  ${jugador2} por elegir "${elemento2}"!`)
     }else if ((elemento1!=""  && elemento1[0]===letra) && (elemento2=="" || elemento2[0]!=letra)){
         puntosJugador1+=perfecto;
         puntosJugador2+=nada;
-        //alert(`¡${jugador2} no escribió nada o no era válido! \n ¡20 puntos para  ${jugador1} por elegir "${elemento1}"!`)
     } else {
         puntosJugador1+=nada;
         puntosJugador2+=nada;
-        //alert(`Ninguno de los dos escribió nada válido! Ningún punto para repartir`)
     }
 }
-
 
 function escribirJugada(){
     renglones.innerHTML += `
@@ -243,34 +243,42 @@ function preguntar (){
     let btnTerminar = document.getElementById("btnTerminar")
     
     btnSeguir.onclick = () => {
-        jugar();
         for (let input of  document.getElementsByClassName("espacioInput1")) {
             input.removeAttribute("disabled");
           }
         puntosJugador1=0
         puntosJugador2=0
         cuaderno.removeChild(cuaderno.lastChild)
+        
+        jugar();
     }
 
     btnTerminar.onclick = () =>{
+        
         escribirPuntos();
-        let mejorJugador = {}
+
         cuaderno.removeChild(cuaderno.lastChild)
 
         if (puntosTotalesJugador1 > puntosTotalesJugador2){
+            
             renglonGanador.innerHTML=`
             <h3 class="jugador1">
             ¡El ganador de toda la partida es ${jugador1}! ¡Con ${puntosTotalesJugador1} puntos!
             </h3>`
-            mejorJugador={ nombre: jugador1, puntos: puntosTotalesJugador1,jugadas: jugadas.length, promedio:(puntosTotalesJugador1/jugadas.length)};
-            mejoresJugadores.push(mejorJugador)
+
+            const mejorJugador = new JugadorRankin (jugador1, puntosTotalesJugador1, jugadas.length, (puntosTotalesJugador1/(jugadas.length)))
+            mejoresJugadores.push(mejorJugador);
+
         }else if (puntosTotalesJugador1 < puntosTotalesJugador2){
+            
             renglonGanador.innerHTML=`
             <h3 class="jugador2">
             ¡El ganador de toda la partida es ${jugador2}! ¡Con ${puntosTotalesJugador2} puntos!
             </h3>`
-            mejorJugador={ nombre: jugador2, puntos: puntosTotalesJugador2,jugadas: jugadas.length, promedio:(puntosTotalesJugador1/jugadas.length)};
-            mejoresJugadores.push(mejorJugador)
+            
+            const mejorJugador = new JugadorRankin (jugador2, puntosTotalesJugador2, jugadas.length, (puntosTotalesJugador2/(jugadas.length)))
+            mejoresJugadores.push(mejorJugador);
+
         }else {
             renglonGanador.innerHTML=`
             <h3>
@@ -279,7 +287,70 @@ function preguntar (){
         }
 
         localStorage.setItem("mejoresJugadores", JSON.stringify(mejoresJugadores));
+
         renglonGanador.innerHTML += botonesFinales
+
+        let btnRanking = document.getElementById("btnRanking");
+
+        btnRanking.onclick =() =>{
+            cuaderno.innerHTML=""
+            renglones.innerHTML=""
+            margenInferior.innerHTML=""
+
+            cuaderno.innerHTML+= `
+            <div class="renglon container-fluid row text-center">
+                <div class="col-1 margenIzquierdo"></div>
+                <div class="col">
+                    <h2>TOP TEN</h2>
+                </div>
+            </div>
+            <div class="renglon container-fluid row text-center">
+                <div class="col-1 margenIzquierdo"></div>
+                <div class="col lineaDivisoria">
+                    <h2>Nombre</h2>
+                </div>
+                <div class="col lineaDivisoria">
+                    <h2>Puntos</h2>
+                </div>
+                <div class="col lineaDivisoria">
+                    <h2>Cantidad de Jugadas</h2>
+                </div>
+            </div>
+            `
+
+            margenInferior.innerHTML+=botonVolverAJugar;
+
+            mejoresJugadores.sort((a, b) => {
+                if (a.promedio > b.promedio) {
+                    return -1;
+                } else if (a.promedio < b.promedio) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            })
+         
+            for (let indice = 0; indice <= 9; indice++){
+                cuaderno.innerHTML+=`
+                <div class="renglon container-fluid row text-center">
+                    <div class="col-1 margenIzquierdo">
+                        <h3>${indice+1}<h3>
+                    </div>
+                    <div class="col lineaDivisoria">
+                        <h3>${mejoresJugadores[indice].nombre}</h3>
+                    </div>
+                    <div class="col lineaDivisoria">
+                        <h3>${mejoresJugadores[indice].puntos}</h3>
+                    </div>
+                    <div class="col lineaDivisoria">
+                        <h3>${mejoresJugadores[indice].cantJugadas}</h3>
+                    </div>
+                </div> 
+                `
+            }
+
+            
+        }
         recordar();
         
     }
@@ -301,12 +372,12 @@ function jugar (){
     function recibiendoDatos1 (e) {
         e.preventDefault();
 
-        nombres1 = document.getElementById('espacioNombres1').value; 
-        animales1 = document.getElementById('espacioAnimales1').value;
-        colores1 = document.getElementById('espacioColores1').value;
-        lugares1 = document.getElementById('espacioLugares1').value;
-        comidas1 = document.getElementById('espacioComidas1').value;
-        objetos1 =document.getElementById('espacioObjetos1').value;
+        nombres1 = (document.getElementById('espacioNombres1').value).toLowerCase(); 
+        animales1 = (document.getElementById('espacioAnimales1').value).toLowerCase();
+        colores1 = (document.getElementById('espacioColores1').value).toLowerCase();
+        lugares1 = (document.getElementById('espacioLugares1').value).toLowerCase();
+        comidas1 = (document.getElementById('espacioComidas1').value).toLowerCase();
+        objetos1 = (document.getElementById('espacioObjetos1').value).toLowerCase();
 
         datos1.reset();
 
@@ -321,12 +392,12 @@ function jugar (){
     function recibiendoDatos2 (e){
         e.preventDefault ();
 
-        nombres2 = document.getElementById('espacioNombres2').value; 
-        animales2 = document.getElementById('espacioAnimales2').value;
-        colores2 = document.getElementById('espacioColores2').value;
-        lugares2 = document.getElementById('espacioLugares2').value;
-        comidas2 = document.getElementById('espacioComidas2').value;
-        objetos2 =document.getElementById('espacioObjetos2').value;
+        nombres2 = (document.getElementById('espacioNombres2').value).toLowerCase(); 
+        animales2 = (document.getElementById('espacioAnimales2').value).toLowerCase();
+        colores2 = (document.getElementById('espacioColores2').value).toLowerCase();
+        lugares2 = (document.getElementById('espacioLugares2').value).toLowerCase();
+        comidas2 = (document.getElementById('espacioComidas2').value).toLowerCase();
+        objetos2 = (document.getElementById('espacioObjetos2').value).toLowerCase();
 
         calculoDePuntos(nombres1,nombres2)
         calculoDePuntos(animales1,animales2)
@@ -335,7 +406,9 @@ function jugar (){
         calculoDePuntos(comidas1,comidas2)
         calculoDePuntos(objetos1,objetos2)
 
-        puntosTotalesJugador1 +=puntosJugador1;
+        escribirJugada();
+
+        puntosTotalesJugador1 += puntosJugador1;
         puntosTotalesJugador2 += puntosJugador2;
 
         let jugadaJugador1 = new JugadaJugador(nombres1, animales1, colores1, lugares1, comidas1, objetos1)
@@ -350,7 +423,7 @@ function jugar (){
             input.setAttribute("disabled", "disabled");
         }
         
-        escribirJugada();
+        
         preguntar();
     }
 }
