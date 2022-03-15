@@ -91,9 +91,13 @@ input{
     padding: 0;
     margin: 0;
     width: 95%;
-
 }
 
+.espacioInputNombre{
+    padding: 0;
+    margin: 0;
+    width: 50%;
+}
 .boton1{
     font-family: 'Caveat Brush', cursive;
     font-size: 20px;
@@ -110,6 +114,15 @@ input{
     text-transform: capitalize;
     width: 80%;
     height: 40px;
+    border-radius: 15px;
+    background-color: $colorLineas;
+}
+
+.boton4{
+    font-family: 'Caveat Brush', cursive;
+    font-size: 20px;
+    text-transform: capitalize;
+    width: 50%;
     border-radius: 15px;
     background-color: $colorLineas;
 }

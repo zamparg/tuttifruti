@@ -1,7 +1,7 @@
 // JUGADA DEL USUARIO
 let letra
 let jugadas=[]
-let jugador1= prompt("¿Cuál es el nombre del Jugador 1?")
+let jugador1= sessionStorage.getItem(`nombreJugador1`);
 let nombres1
 let animales1
 let colores1
@@ -12,7 +12,7 @@ let puntosJugador1=0
 let puntosTotalesJugador1=0
 
 // JUGADA DEL USUARIO2 (LUEGO PUEDE SER UNA LISTA, PARA JUGAR CONTRA LA PC)
-let jugador2= prompt("¿Cuál es el nombre del Jugador 2?")    
+let jugador2= sessionStorage.getItem(`nombreJugador2`);    
 let nombres2
 let animales2
 let colores2
@@ -63,7 +63,7 @@ let botonesFinales = `
             <button class="boton1" id="btnRanking">Ver Ranking</button>
         </div>
         <div class="col">
-            <a href="."><button class="boton2" id="btnReset">Volver a Jugar</button></a>
+            <a href="index.html"><button class="boton2" id="btnReset">Volver a Jugar</button></a>
         </div>
     </div>`
 
@@ -71,7 +71,7 @@ let botonVolverAJugar = `
     <div class="container-fluid row renglonFinal text-center">
         <div class="col-1 margenIzquierdo footer"></div>
         <div class="col">
-            <a href="."><button class="boton3">Volver a Jugar</button> </a>
+            <a href="index.html"><button class="boton3">Volver a Jugar</button> </a>
         </div>
     </div>`
 
@@ -228,6 +228,7 @@ function recordar(){
             puntos:jugada.puntosJugador2
         }
     })
+
     console.log(`Mejores Jugadas de ${jugador1}`)
     console.log(mejoresJugadas1)
     console.log(`Mejores Jugadas de ${jugador2}`)
