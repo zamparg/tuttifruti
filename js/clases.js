@@ -1,15 +1,5 @@
 // CONSTRUCTORES
 
-class JugadaJugador{
-    constructor (nombres,animales,colores, lugares,comidas, objetos){
-        this.nombres= nombres;
-        this.animales=animales;
-        this.colores= colores;
-        this.lugares=lugares;
-        this.comidas=comidas;
-        this.objetos=objetos;
-    }
-}
 
 class Jugada {
     constructor (letra, jugadaJugador1, puntosJugador1, puntosTotalesJugador1, jugadaJugador2, puntosJugador2, puntosTotalesJugador2){
@@ -29,5 +19,16 @@ class JugadorRankin {
         this.puntos= puntos;
         this.cantJugadas=cantJugadas;
         this.promedio=promedio;
+    }
+}
+
+class JugadaJugador {
+    constructor(nombres, animales, colores, lugares, comidas, objetos){
+        this.nombres=nombres;
+        this.animales=animales;
+        this.colores=colores;
+        this.lugares=lugares;
+        this.comidas=comidas;
+        this.objetos=objetos;
     }
 }

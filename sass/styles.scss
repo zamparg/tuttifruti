@@ -35,6 +35,10 @@ h2{
 h3{
     font-family: 'Caveat Brush', cursive;
 }
+.jugador{
+    font-family: 'Caveat Brush', cursive;
+}
+
 .jugador1{
     font-family: 'Caveat Brush', cursive;
     color: $colorMargen;
@@ -140,4 +144,8 @@ input{
 
 input:disabled{
     background: $colorLineas;
+}
+.toastify {
+    border-radius: 10px;
+    box-shadow: -3px 5px 11px 4px rgba(0, 0, 0, 0.38);
 }

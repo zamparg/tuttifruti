@@ -35,6 +35,10 @@ h3 {
   font-family: 'Caveat Brush', cursive;
 }
 
+.jugador {
+  font-family: 'Caveat Brush', cursive;
+}
+
 .jugador1 {
   font-family: 'Caveat Brush', cursive;
   color: #d6a0bc;
@@ -151,5 +155,11 @@ input {
 
 input:disabled {
   background: #a0bcd6;
+}
+
+.toastify {
+  border-radius: 10px;
+  -webkit-box-shadow: -3px 5px 11px 4px rgba(0, 0, 0, 0.38);
+          box-shadow: -3px 5px 11px 4px rgba(0, 0, 0, 0.38);
 }
 /*# sourceMappingURL=styles.css.map */
