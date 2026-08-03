@@ -22,7 +22,6 @@ const espacioTimer = document.getElementById("espacioTimer");
 const filaEncabezados = document.getElementById("filaEncabezados");
 const filaRespuestas = document.getElementById("filaRespuestas");
 const espacioJugador1 = document.getElementById("espacioJugador1");
-const btnFinalizar = document.getElementById("btnFinalizar");
 const renglones = document.getElementById("renglones");
 const puntajeTotal1 = document.getElementById("puntosJugador1");
 const puntajeTotal2 = document.getElementById("puntosJugador2");
@@ -30,15 +29,15 @@ const renglonGanador = document.getElementById("renglonGanador");
 
 espacioJugador1.innerHTML = `<p class="jugador1">${nombreJugador}</p>`;
 
-// Estado local de "qué ronda ya rendericé", para no reconstruir el formulario ni repetir
-// avisos cada vez que el listener de Firebase se dispara de nuevo por cualquier escritura.
+// Estado local para no repetir acciones (reconstruir DOM, disparar cálculos) cada vez que
+// el listener de Firebase se dispara de nuevo por cualquier escritura.
 let numeroRondaEnPantalla = null;
 let avisoTiempoMostrado = false;
 let intervaloTimer = null;
 let botYaLanzadoParaLetra = null;
 let calculoYaDisparadoParaRonda = null;
+let autoFinalizadoParaRonda = null;
 let resultadoYaEscritoParaRonda = null;
-let siguienteRondaYaProgramada = null;
 
 function construirFormulario(categorias) {
     filaEncabezados.innerHTML = `<th>Letra</th>`;
@@ -57,7 +56,7 @@ function construirFormulario(categorias) {
                 </div>
             </td>`;
     }
-    filaRespuestas.innerHTML += `<td></td>`;
+    filaRespuestas.innerHTML += `<td id="celdaBotonFinalizar"><button id="btnFinalizar" class="btn boton1">Finalizar</button></td>`;
 
     for (const categoria of categorias) {
         document.getElementById(`noHay_${categoria}`).addEventListener("change", (e) => {
@@ -70,14 +69,18 @@ function construirFormulario(categorias) {
             }
         });
     }
+
+    document.getElementById("btnFinalizar").onclick = onClickFinalizar;
 }
 
 function leerRespuestasPropias(categorias) {
     const valores = {};
     const noHayPosibles = {};
     for (const categoria of categorias) {
-        valores[categoria] = document.getElementById(`input_${categoria}`).value.trim().toLowerCase();
-        noHayPosibles[categoria] = document.getElementById(`noHay_${categoria}`).checked;
+        const inputEl = document.getElementById(`input_${categoria}`);
+        const checkEl = document.getElementById(`noHay_${categoria}`);
+        valores[categoria] = inputEl ? inputEl.value.trim().toLowerCase() : "";
+        noHayPosibles[categoria] = checkEl ? checkEl.checked : false;
     }
     return { valores, noHayPosibles };
 }
@@ -86,20 +89,21 @@ function deshabilitarFormulario() {
     for (const input of filaRespuestas.querySelectorAll("input")) {
         input.setAttribute("disabled", "disabled");
     }
-    btnFinalizar.setAttribute("disabled", "disabled");
+    const btn = document.getElementById("btnFinalizar");
+    if (btn) btn.setAttribute("disabled", "disabled");
 }
 
-btnFinalizar.onclick = async () => {
+async function onClickFinalizar() {
     const snapshot = await refSala(codigo).get();
     const sala = snapshot.val();
     const { valores, noHayPosibles } = leerRespuestasPropias(sala.config.categorias);
     await finalizarTurno(codigo, quienSoy, valores, noHayPosibles);
     deshabilitarFormulario();
-};
+}
 
 function actualizarTimer(finLimiteTimestamp) {
     clearInterval(intervaloTimer);
-    intervaloTimer = setInterval(() => {
+    intervaloTimer = setInterval(async () => {
         const restanteMs = finLimiteTimestamp - Date.now();
         const restanteSeg = Math.max(0, Math.ceil(restanteMs / 1000));
         espacioTimer.textContent = `${restanteSeg}s`;
@@ -109,36 +113,213 @@ function actualizarTimer(finLimiteTimestamp) {
                 avisoTiempoMostrado = true;
                 avisos("¡Se acabó el tiempo!", 3000);
             }
+
+            // Auto-envío de lo que tenga tipeado si todavía no finalicé, una sola vez.
+            const snapshot = await refSala(codigo).get();
+            const sala = snapshot.val();
+            if (sala && sala.rondaActual && numeroRondaEnPantalla === sala.rondaActual.numero
+                && autoFinalizadoParaRonda !== sala.rondaActual.numero) {
+                const miRespuesta = sala.rondaActual.respuestas[quienSoy];
+                if (miRespuesta && !miRespuesta.finalizado) {
+                    autoFinalizadoParaRonda = sala.rondaActual.numero;
+                    const { valores, noHayPosibles } = leerRespuestasPropias(sala.config.categorias);
+                    await finalizarTurno(codigo, quienSoy, valores, noHayPosibles);
+                    deshabilitarFormulario();
+                }
+            }
         }
     }, 250);
 }
 
-function escribirFilaHistorial(entrada, jugador1Nombre, jugador2Nombre, categorias) {
-    // Firebase omite objetos vacíos al guardar (ej. un jugador que no escribió nada),
-    // así que jugadaJugador1/2 puede llegar undefined en vez de {}.
-    const celdasJugador = (jugada) => categorias.map(c => `<td>${(jugada && jugada[c]) || ""}</td>`).join("");
+function celdaConPuntaje(valor, puntos, categoria, indiceHistorial, quienEsElDeLaCelda, disputa) {
+    const puntosTexto = puntos !== undefined ? `<span class="puntitoCelda">${puntos}</span>` : "";
+    const puedeDisputar = valor && !disputa;
+    const botonDisputar = puedeDisputar
+        ? `<button type="button" class="btnDisputar" data-cat="${categoria}" data-indice="${indiceHistorial}" data-contra="${quienEsElDeLaCelda}">discutir</button>`
+        : "";
+    const marcaDisputa = disputa ? `<span class="marcaDisputa" data-cat="${categoria}" data-indice="${indiceHistorial}">⚠ en disputa</span>` : "";
+    return `<td>${valor || ""} ${puntosTexto}${botonDisputar}${marcaDisputa}</td>`;
+}
 
-    renglones.innerHTML += `
-        <table class="tablaJuego">
+function escribirFilaHistorial(entrada, indiceHistorial, jugador1Nombre, jugador2Nombre, categorias) {
+    const detalle = entrada.detallePorCategoria || {};
+    const disputas = entrada.disputas || {};
+
+    const celdasP1 = categorias.map(c => celdaConPuntaje(
+        entrada.jugadaJugador1 && entrada.jugadaJugador1[c], detalle[c] && detalle[c].p1,
+        c, indiceHistorial, "p1", disputas[c]
+    )).join("");
+
+    const celdasP2 = categorias.map(c => celdaConPuntaje(
+        entrada.jugadaJugador2 && entrada.jugadaJugador2[c], detalle[c] && detalle[c].p2,
+        c, indiceHistorial, "p2", disputas[c]
+    )).join("");
+
+    const filaId = `historial-${indiceHistorial}`;
+    let filaExistente = document.getElementById(filaId);
+
+    const html = `
+        <table class="tablaJuego tablaHistorial" id="${filaId}">
             <tbody>
                 <tr>
+                    <td rowspan="2"><p>${entrada.letra.toUpperCase()}</p></td>
                     <td><p class="jugador1">${jugador1Nombre}</p></td>
-                    <td>${entrada.letra.toUpperCase()}</td>
-                    ${celdasJugador(entrada.jugadaJugador1)}
+                    ${celdasP1}
                     <td class="jugador1">${entrada.puntosJugador1}</td>
                 </tr>
                 <tr>
                     <td><p class="jugador2">${jugador2Nombre}</p></td>
-                    <td>${entrada.letra.toUpperCase()}</td>
-                    ${celdasJugador(entrada.jugadaJugador2)}
+                    ${celdasP2}
                     <td class="jugador2">${entrada.puntosJugador2}</td>
                 </tr>
             </tbody>
         </table>`;
+
+    if (filaExistente) {
+        filaExistente.outerHTML = html;
+    } else {
+        renglones.innerHTML += html;
+    }
+
+    for (const boton of renglones.querySelectorAll(`#${filaId} .btnDisputar`)) {
+        boton.onclick = () => abrirModalDisputa(boton.dataset.indice, boton.dataset.cat, boton.dataset.contra);
+    }
+    for (const marca of renglones.querySelectorAll(`#${filaId} .marcaDisputa`)) {
+        marca.onclick = () => abrirModalDisputa(marca.dataset.indice, marca.dataset.cat, null);
+    }
+}
+
+// --- DISPUTAS ---
+
+let modalDisputaEl = null;
+
+function cerrarModalDisputa() {
+    if (modalDisputaEl) {
+        modalDisputaEl.remove();
+        modalDisputaEl = null;
+    }
+}
+
+async function abrirModalDisputa(indiceHistorial, categoria, contraQuienInicial) {
+    cerrarModalDisputa();
+
+    const snapshot = await refSala(codigo).get();
+    const sala = snapshot.val();
+    const entrada = sala.historial[indiceHistorial];
+    const disputa = entrada.disputas && entrada.disputas[categoria];
+
+    modalDisputaEl = document.createElement("div");
+    modalDisputaEl.className = "modalDisputa";
+
+    if (!disputa) {
+        modalDisputaEl.innerHTML = `
+            <div class="modalDisputaContenido">
+                <h3>Disputar "${categoria}"</h3>
+                <p>Palabra en cuestión: <b>${entrada[contraQuienInicial === "p1" ? "jugadaJugador1" : "jugadaJugador2"][categoria]}</b></p>
+                <textarea id="causaDisputa" placeholder="¿Por qué la disputás?"></textarea>
+                <div class="modalDisputaBotones">
+                    <button id="btnEnviarDisputa" class="btn boton1">Enviar</button>
+                    <button id="btnCerrarDisputa" class="btn boton3">Cancelar</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modalDisputaEl);
+        document.getElementById("btnCerrarDisputa").onclick = cerrarModalDisputa;
+        document.getElementById("btnEnviarDisputa").onclick = async () => {
+            const causa = document.getElementById("causaDisputa").value.trim();
+            if (!causa) return;
+            await abrirDisputa(codigo, indiceHistorial, categoria, quienSoy, contraQuienInicial, causa);
+            cerrarModalDisputa();
+        };
+        return;
+    }
+
+    const esMiTurno = disputa.turno === quienSoy;
+    const historialArgumentos = disputa.argumentos.map(a => `<p><b>${a.autor === quienSoy ? "Vos" : "Rival"}:</b> ${a.tipo === "aceptar" ? "Aceptó" : a.texto}</p>`).join("");
+
+    modalDisputaEl.innerHTML = `
+        <div class="modalDisputaContenido">
+            <h3>Disputa: "${categoria}"</h3>
+            <div class="historialArgumentos">${historialArgumentos}</div>
+            ${disputa.estado === "resuelta"
+                ? `<p><i>Disputa resuelta.</i></p><div class="modalDisputaBotones"><button id="btnCerrarDisputa" class="btn boton3">Cerrar</button></div>`
+                : esMiTurno
+                    ? `<textarea id="causaDisputa" placeholder="Tu argumento si rechazás..."></textarea>
+                       <div class="modalDisputaBotones">
+                           <button id="btnAceptarDisputa" class="btn boton2">Aceptar (mi palabra no vale)</button>
+                           <button id="btnRechazarDisputa" class="btn boton1">Rechazar y argumentar</button>
+                           <button id="btnCerrarDisputa" class="btn boton3">Cerrar</button>
+                       </div>`
+                    : `<p><i>Esperando respuesta del rival...</i></p><div class="modalDisputaBotones"><button id="btnCerrarDisputa" class="btn boton3">Cerrar</button></div>`
+            }
+        </div>`;
+
+    document.body.appendChild(modalDisputaEl);
+    document.getElementById("btnCerrarDisputa").onclick = cerrarModalDisputa;
+
+    const btnAceptar = document.getElementById("btnAceptarDisputa");
+    const btnRechazar = document.getElementById("btnRechazarDisputa");
+    if (btnAceptar) {
+        btnAceptar.onclick = async () => {
+            await responderDisputa(codigo, indiceHistorial, categoria, quienSoy, "aceptar", "");
+            cerrarModalDisputa();
+        };
+    }
+    if (btnRechazar) {
+        btnRechazar.onclick = async () => {
+            const texto = document.getElementById("causaDisputa").value.trim();
+            if (!texto) return;
+            await responderDisputa(codigo, indiceHistorial, categoria, quienSoy, "rechazar", texto);
+            cerrarModalDisputa();
+        };
+    }
+}
+
+// --- CONTINUAR ---
+
+function mostrarBotonContinuar(sala, ronda) {
+    let contenedor = document.getElementById("contenedorContinuar");
+    if (!contenedor) {
+        contenedor = document.createElement("div");
+        contenedor.id = "contenedorContinuar";
+        contenedor.className = "renglon container-fluid row text-center";
+        contenedor.innerHTML = `
+            <div class="col-1 margenIzquierdo"></div>
+            <div class="col">
+                <button id="btnContinuar" class="btn boton1">Continuar</button>
+            </div>
+            <div class="col" id="estadoContinuar"></div>`;
+        document.getElementById("cuaderno").appendChild(contenedor);
+        document.getElementById("btnContinuar").onclick = async () => {
+            document.getElementById("btnContinuar").setAttribute("disabled", "disabled");
+            await confirmarContinuar(codigo, quienSoy);
+        };
+    }
+
+    const entrada = sala.historial && sala.historial[ronda.numero - 1];
+    const hayDisputas = hayDisputasAbiertas(entrada);
+    const btnContinuar = document.getElementById("btnContinuar");
+    const estadoContinuar = document.getElementById("estadoContinuar");
+
+    if (hayDisputas) {
+        btnContinuar.setAttribute("disabled", "disabled");
+        estadoContinuar.textContent = "Hay una disputa sin resolver.";
+    } else if (ronda.confirmadoContinuar[quienSoy]) {
+        btnContinuar.setAttribute("disabled", "disabled");
+        estadoContinuar.textContent = "Esperando al rival...";
+    } else {
+        btnContinuar.removeAttribute("disabled");
+        estadoContinuar.textContent = "";
+    }
+}
+
+function quitarBotonContinuar() {
+    const contenedor = document.getElementById("contenedorContinuar");
+    if (contenedor) contenedor.remove();
 }
 
 function mostrarFinDePartida(sala) {
     clearInterval(intervaloTimer);
+    quitarBotonContinuar();
 
     const puntos1 = sala.jugadores.p1.puntosTotales || 0;
     const puntos2 = sala.jugadores.p2.puntosTotales || 0;
@@ -166,7 +347,7 @@ function mostrarFinDePartida(sala) {
             </div>
         </div>`;
 
-    btnFinalizar.style.display = "none";
+    document.getElementById("cuaderno").style.display = "none";
 }
 
 escucharSala(codigo, async (sala) => {
@@ -181,20 +362,31 @@ escucharSala(codigo, async (sala) => {
 
     const ronda = sala.rondaActual;
 
-    // --- Nueva ronda: reconstruir el formulario una sola vez ---
+    // --- Ronda todavía no revelada: mostrar espera de "Continuar" sin letra ni formulario ---
+    if (!ronda.revelada) {
+        numeroRondaEnPantalla = null; // fuerza reconstrucción cuando se revele
+        espacioLetraRonda.textContent = "?";
+        espacioTimer.textContent = "";
+        filaEncabezados.innerHTML = "";
+        filaRespuestas.innerHTML = "";
+        mostrarBotonContinuar(sala, ronda);
+        return;
+    }
+
+    // --- Nueva ronda revelada: reconstruir el formulario una sola vez ---
     if (ronda.numero !== numeroRondaEnPantalla) {
         numeroRondaEnPantalla = ronda.numero;
         avisoTiempoMostrado = false;
         botYaLanzadoParaLetra = null;
         calculoYaDisparadoParaRonda = null;
+        autoFinalizadoParaRonda = null;
+
+        quitarBotonContinuar();
 
         espacioLetraRonda.textContent = ronda.letra.toUpperCase();
         avisos(`¡Vamos a jugar con la letra "${ronda.letra.toUpperCase()}"!`, 3000);
 
         construirFormulario(sala.config.categorias);
-        btnFinalizar.style.display = "";
-        btnFinalizar.removeAttribute("disabled");
-
         actualizarTimer(ronda.finLimiteTimestamp);
     }
 
@@ -213,12 +405,11 @@ escucharSala(codigo, async (sala) => {
     // Solo el creador dispara el cálculo de puntos, una sola vez por ronda.
     if (quienSoy === "p1" && ronda.estado === "en_curso" && turnoDebeCerrarse(ronda) && calculoYaDisparadoParaRonda !== ronda.numero) {
         calculoYaDisparadoParaRonda = ronda.numero;
-        await calcularYCerrarRonda(codigo, sala);
+        await calcularYCerrarRonda(codigo);
     }
 
-    // --- Ronda cerrada: mostrar resultado y programar el avance, una sola vez por ronda ---
-    if (ronda.estado === "cerrada" && resultadoYaEscritoParaRonda !== ronda.numero) {
-        resultadoYaEscritoParaRonda = ronda.numero;
+    // --- Ronda cerrada: mostrar/actualizar resultado y ofrecer Continuar (nunca avanza sola) ---
+    if (ronda.estado === "cerrada") {
         clearInterval(intervaloTimer);
         deshabilitarFormulario();
 
@@ -226,22 +417,29 @@ escucharSala(codigo, async (sala) => {
         const entrada = sala.historial && sala.historial[indiceHistorial];
 
         if (entrada) {
-            escribirFilaHistorial(entrada, sala.jugadores.p1.nombre, sala.jugadores.p2.nombre, sala.config.categorias);
+            escribirFilaHistorial(entrada, indiceHistorial, sala.jugadores.p1.nombre, sala.jugadores.p2.nombre, sala.config.categorias);
             puntajeTotal1.innerHTML = `<p class="jugador1">${sala.jugadores.p1.nombre}: ${sala.jugadores.p1.puntosTotales} puntos.</p>`;
             puntajeTotal2.innerHTML = `<p class="jugador2">${sala.jugadores.p2.nombre}: ${sala.jugadores.p2.puntosTotales} puntos.</p>`;
 
-            if (entrada.puntosJugador1 > entrada.puntosJugador2) {
-                avisos(`¡Ganó la ronda ${sala.jugadores.p1.nombre}!`, 3000);
-            } else if (entrada.puntosJugador2 > entrada.puntosJugador1) {
-                avisos(`¡Ganó la ronda ${sala.jugadores.p2.nombre}!`, 3000);
-            } else {
-                avisos("¡Empate en la ronda!", 3000);
+            if (resultadoYaEscritoParaRonda !== ronda.numero) {
+                resultadoYaEscritoParaRonda = ronda.numero;
+                if (entrada.puntosJugador1 > entrada.puntosJugador2) {
+                    avisos(`¡Ganó la ronda ${sala.jugadores.p1.nombre}!`, 3000);
+                } else if (entrada.puntosJugador2 > entrada.puntosJugador1) {
+                    avisos(`¡Ganó la ronda ${sala.jugadores.p2.nombre}!`, 3000);
+                } else {
+                    avisos("¡Empate en la ronda!", 3000);
+                }
             }
         }
 
-        if (quienSoy === "p1" && siguienteRondaYaProgramada !== ronda.numero) {
-            siguienteRondaYaProgramada = ronda.numero;
-            setTimeout(() => avanzarSiguienteRonda(codigo), 3000);
+        mostrarBotonContinuar(sala, ronda);
+
+        // Si ambos ya confirmaron continuar y no hay disputas abiertas, avanza a la ronda siguiente.
+        const entradaActual = sala.historial && sala.historial[indiceHistorial];
+        const ambosConfirmaron = ronda.confirmadoContinuar && ronda.confirmadoContinuar.p1 && ronda.confirmadoContinuar.p2;
+        if (ambosConfirmaron && !hayDisputasAbiertas(entradaActual) && quienSoy === "p1") {
+            await avanzarSiguienteRonda(codigo);
         }
     }
 });
