@@ -9,11 +9,38 @@ function avisos(aviso, duracion) {
     }).showToast();
 }
 
+const pasoModo = document.getElementById("pasoModo");
+const pasoMultijugador = document.getElementById("pasoMultijugador");
+const pasoBot = document.getElementById("pasoBot");
+const pasoUnirse = document.getElementById("pasoUnirse");
+
+const btnModoMultijugador = document.getElementById("btnModoMultijugador");
+const btnModoBot = document.getElementById("btnModoBot");
+const btnModoUnirse = document.getElementById("btnModoUnirse");
+const btnVolverDeMultijugador = document.getElementById("btnVolverDeMultijugador");
+const btnVolverDeBot = document.getElementById("btnVolverDeBot");
+const btnVolverDeUnirse = document.getElementById("btnVolverDeUnirse");
+
 const formCrearSala = document.getElementById("formCrearSala");
 const formUnirseSala = document.getElementById("formUnirseSala");
 const formJugarBot = document.getElementById("formJugarBot");
 const codigoGenerado = document.getElementById("codigoGenerado");
 const textoCodigoGenerado = document.getElementById("textoCodigoGenerado");
+
+function mostrarPaso(paso) {
+    pasoModo.style.display = "none";
+    pasoMultijugador.style.display = "none";
+    pasoBot.style.display = "none";
+    pasoUnirse.style.display = "none";
+    paso.style.display = "";
+}
+
+btnModoMultijugador.onclick = () => mostrarPaso(pasoMultijugador);
+btnModoBot.onclick = () => mostrarPaso(pasoBot);
+btnModoUnirse.onclick = () => mostrarPaso(pasoUnirse);
+btnVolverDeMultijugador.onclick = () => mostrarPaso(pasoModo);
+btnVolverDeBot.onclick = () => mostrarPaso(pasoModo);
+btnVolverDeUnirse.onclick = () => mostrarPaso(pasoModo);
 
 formCrearSala.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -26,10 +53,11 @@ formCrearSala.addEventListener("submit", async (e) => {
         sessionStorage.setItem("quienSoy", "p1");
         sessionStorage.setItem("nombreJugador", nombre);
 
+        formCrearSala.style.display = "none";
+        formUnirseSala.style.display = "none";
         textoCodigoGenerado.textContent = codigo;
         codigoGenerado.style.display = "";
 
-        // Escucha hasta que el jugador 2 se una, luego avanza a la config.
         const detener = escucharSala(codigo, (sala) => {
             if (sala && sala.jugadores && sala.jugadores.p2) {
                 detener();

@@ -18,94 +18,120 @@
         </div>
     </header>
     <main>
-        <div class="renglon container-fluid row text-center">
-            <div class="col-1 margenIzquierdo"></div>
-            <div class="col jugador">
-                <h2>¿Cómo querés jugar?</h2>
+        <!-- PASO 1: ELEGIR MODO -->
+        <div id="pasoModo">
+            <div class="renglon container-fluid row text-center">
+                <div class="col-1 margenIzquierdo"></div>
+                <div class="col jugador">
+                    <h2>¿Cómo querés jugar?</h2>
+                </div>
+            </div>
+            <div class="renglon container-fluid row text-center">
+                <div class="col-1 margenIzquierdo"></div>
+                <div class="col">
+                    <button id="btnModoMultijugador" class="btn boton1">Multijugador (crear sala)</button>
+                </div>
+                <div class="col">
+                    <button id="btnModoBot" class="btn boton2">Jugar contra la PC</button>
+                </div>
+                <div class="col">
+                    <button id="btnModoUnirse" class="btn boton4">Unirse a sala</button>
+                </div>
             </div>
         </div>
 
-        <!-- CREAR SALA -->
-        <form id="formCrearSala" autocomplete="off">
+        <!-- PASO 2A: MULTIJUGADOR - CREAR SALA -->
+        <div id="pasoMultijugador" style="display:none">
             <div class="renglon container-fluid row text-center">
                 <div class="col-1 margenIzquierdo"></div>
                 <div class="col jugador1 espacio">
                     <h3>Crear sala</h3>
                 </div>
             </div>
-            <div class="renglon container-fluid row text-center">
-                <div class="col-1 margenIzquierdo"></div>
-                <div class="col jugador1 espacio">
-                    <input type="text" class="espacioInputNombre" id="nombreCreador" placeholder="Tu nombre" required>
+            <form id="formCrearSala" autocomplete="off">
+                <div class="renglon container-fluid row text-center">
+                    <div class="col-1 margenIzquierdo"></div>
+                    <div class="col jugador1 espacio">
+                        <input type="text" class="espacioInputNombre" id="nombreCreador" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="col espacio">
+                        <input type="submit" value="Crear sala" class="btn boton4">
+                    </div>
                 </div>
-            </div>
+            </form>
+
             <div class="renglon container-fluid row text-center">
                 <div class="col-1 margenIzquierdo"></div>
                 <div class="col">
-                    <input type="submit" value="Crear sala" class="btn boton4">
+                    <button id="btnVolverDeMultijugador" class="btn boton3">Volver</button>
                 </div>
             </div>
-        </form>
+        </div>
 
-        <!-- UNIRSE A SALA -->
-        <form id="formUnirseSala" autocomplete="off">
+        <!-- PASO 2B: BOT - NOMBRE Y NIVEL -->
+        <div id="pasoBot" style="display:none">
+            <div class="renglon container-fluid row text-center">
+                <div class="col-1 margenIzquierdo"></div>
+                <div class="col jugador">
+                    <h3>Jugar contra la PC</h3>
+                </div>
+            </div>
+            <form id="formJugarBot" autocomplete="off">
+                <div class="renglon container-fluid row text-center">
+                    <div class="col-1 margenIzquierdo"></div>
+                    <div class="col jugador espacio">
+                        <input type="text" class="espacioInputNombre" id="nombreJugadorBot" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="col jugador espacio">
+                        <select id="nivelBot" class="espacioInputNombre">
+                            <option value="facil">IQ Fácil</option>
+                            <option value="medio" selected>IQ Medio</option>
+                            <option value="dificil">IQ Difícil</option>
+                        </select>
+                    </div>
+                    <div class="col espacio">
+                        <input type="submit" value="Jugar" class="btn boton4">
+                    </div>
+                </div>
+            </form>
+            <div class="renglon container-fluid row text-center">
+                <div class="col-1 margenIzquierdo"></div>
+                <div class="col">
+                    <button id="btnVolverDeBot" class="btn boton3">Volver</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PASO 2C: UNIRSE A SALA -->
+        <div id="pasoUnirse" style="display:none">
             <div class="renglon container-fluid row text-center">
                 <div class="col-1 margenIzquierdo"></div>
                 <div class="col jugador2 espacio">
                     <h3>Unirse con código</h3>
                 </div>
             </div>
-            <div class="renglon container-fluid row text-center">
-                <div class="col-1 margenIzquierdo"></div>
-                <div class="col jugador2 espacio">
-                    <input type="text" class="espacioInputNombre" id="nombreInvitado" placeholder="Tu nombre" required>
+            <form id="formUnirseSala" autocomplete="off">
+                <div class="renglon container-fluid row text-center">
+                    <div class="col-1 margenIzquierdo"></div>
+                    <div class="col jugador2 espacio">
+                        <input type="text" class="espacioInputNombre" id="nombreInvitado" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="col jugador2 espacio">
+                        <input type="text" class="espacioInputNombre" id="codigoSala" placeholder="Código de sala" maxlength="6" style="text-transform:uppercase" required>
+                    </div>
+                    <div class="col espacio">
+                        <input type="submit" value="Unirse" class="btn boton4">
+                    </div>
                 </div>
-            </div>
-            <div class="renglon container-fluid row text-center">
-                <div class="col-1 margenIzquierdo"></div>
-                <div class="col jugador2 espacio">
-                    <input type="text" class="espacioInputNombre" id="codigoSala" placeholder="Código de sala" maxlength="6" style="text-transform:uppercase" required>
-                </div>
-            </div>
-            <div class="renglon container-fluid row text-center">
-                <div class="col-1 margenIzquierdo"></div>
-                <div class="col">
-                    <input type="submit" value="Unirse" class="btn boton4">
-                </div>
-            </div>
-        </form>
+            </form>
 
-        <!-- JUGAR CONTRA LA PC -->
-        <form id="formJugarBot" autocomplete="off">
-            <div class="renglon container-fluid row text-center">
-                <div class="col-1 margenIzquierdo"></div>
-                <div class="col jugador espacio">
-                    <h3>Jugar contra la PC</h3>
-                </div>
-            </div>
-            <div class="renglon container-fluid row text-center">
-                <div class="col-1 margenIzquierdo"></div>
-                <div class="col jugador espacio">
-                    <input type="text" class="espacioInputNombre" id="nombreJugadorBot" placeholder="Tu nombre" required>
-                </div>
-            </div>
-            <div class="renglon container-fluid row text-center">
-                <div class="col-1 margenIzquierdo"></div>
-                <div class="col jugador espacio">
-                    <select id="nivelBot" class="espacioInputNombre">
-                        <option value="facil">IQ Fácil</option>
-                        <option value="medio" selected>IQ Medio</option>
-                        <option value="dificil">IQ Difícil</option>
-                    </select>
-                </div>
-            </div>
             <div class="renglon container-fluid row text-center">
                 <div class="col-1 margenIzquierdo"></div>
                 <div class="col">
-                    <input type="submit" value="Jugar contra la PC" class="btn boton4">
+                    <button id="btnVolverDeUnirse" class="btn boton3">Volver</button>
                 </div>
             </div>
-        </form>
+        </div>
 
         <!-- CÓDIGO GENERADO PARA COMPARTIR -->
         <div id="codigoGenerado" class="renglon container-fluid row text-center" style="display:none">
@@ -113,6 +139,7 @@
             <div class="col jugador1">
                 <h3>Compartí este código con tu rival:</h3>
                 <h1 id="textoCodigoGenerado"></h1>
+                <p>Esperando que se una...</p>
             </div>
         </div>
     </main>
