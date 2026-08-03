@@ -1,237 +1,236 @@
 [
     {
         "letra":"a",
-        "nombres":"azul",
-        "animales":"anguila",
-        "colores":"amarillo",
-        "lugares":"argentina",
-        "comidas":"arroz",
-        "objetos":"almohada"
+        "nombres":["azul","andrea","alberto"],
+        "animales":["anguila","aguila","avestruz"],
+        "colores":["amarillo","azulado","aguamarina"],
+        "lugares":["argentina","alemania","atenas"],
+        "comidas":["arroz","alfajor","asado"],
+        "objetos":["almohada","anillo","abanico"]
     },
     {
         "letra":"b",
-        "nombres":"bernardo",
-        "animales":"boa",
-        "colores":"blanco",
-        "lugares":"bolivia",
-        "comidas":"brocoli",
-        "objetos":"buzon"
+        "nombres":["bernardo","beatriz","bruno"],
+        "animales":["boa","burro","buho"],
+        "colores":["blanco","beige","bordo"],
+        "lugares":["bolivia","brasil","berlin"],
+        "comidas":["brocoli","budin","banana"],
+        "objetos":["buzon","bufanda","boligrafo"]
     },
     {
         "letra":"c",
-        "nombres":"cecilia",
-        "animales":"canguro",
-        "colores":"celeste",
-        "lugares":"copenhague",
-        "comidas":"carne",
-        "objetos":"calendario"
+        "nombres":["cecilia","carlos","camila"],
+        "animales":["canguro","caballo","cabra"],
+        "colores":["celeste","cian","carmesi"],
+        "lugares":["copenhague","canada","cuba"],
+        "comidas":["carne","churrasco","cerezas"],
+        "objetos":["calendario","cuchara","candado"]
     },
     {
         "letra":"d",
-        "nombres":"dolores",
-        "animales":"delfin",
-        "colores":"dorado",
-        "lugares":"dinamarca",
-        "comidas":"datiles",
-        "objetos":"daga"
+        "nombres":["dolores","daniel","diana"],
+        "animales":["delfin","dromedario","doberman"],
+        "colores":["dorado","durazno",""],
+        "lugares":["dinamarca","dubai","damasco"],
+        "comidas":["datiles","donas","duraznos"],
+        "objetos":["daga","dado","despertador"]
     },
     {
         "letra":"e",
-        "nombres":"estefania",
-        "animales":"escarabajo",
-        "colores":"esmeralda",
-        "lugares":"estocolmo",
-        "comidas":"espinaca",
-        "objetos":"espejo"
+        "nombres":["estefania","eduardo","elena"],
+        "animales":["escarabajo","elefante","erizo"],
+        "colores":["esmeralda","escarlata",""],
+        "lugares":["estocolmo","egipto","ecuador"],
+        "comidas":["espinaca","empanada","ensalada"],
+        "objetos":["espejo","escoba","estufa"]
     },
     {
         "letra":"f",
-        "nombres":"facundo",
-        "animales":"flamenco",
-        "colores":"frambuesa",
-        "lugares":"florencia",
-        "comidas":"flan",
-        "objetos":"fantasma"
+        "nombres":["facundo","florencia","fernando"],
+        "animales":["flamenco","foca","faisan"],
+        "colores":["frambuesa","fucsia",""],
+        "lugares":["florencia","francia","filipinas"],
+        "comidas":["flan","fideos","frutillas"],
+        "objetos":["fantasma","fosforo","farol"]
     },
     {
         "letra":"g",
-        "nombres":"graciela",
-        "animales":"gaviota",
-        "colores":"granate",
-        "lugares":"ginebra",
-        "comidas":"guacamole",
-        "objetos":"guante"
+        "nombres":["graciela","gustavo","gabriela"],
+        "animales":["gaviota","gato","gorila"],
+        "colores":["granate","gris",""],
+        "lugares":["ginebra","grecia","guatemala"],
+        "comidas":["guacamole","galletas","gaseosa"],
+        "objetos":["guante","gorro","globo"]
     },
     {
         "letra":"h",
-        "nombres":"hugo",
-        "animales":"hormiga",
-        "colores":"humo",
-        "lugares":"humahuaca",
-        "comidas":"helado",
-        "objetos":"hacha"
+        "nombres":["hugo","horacio","helena"],
+        "animales":["hormiga","hipopotamo","halcon"],
+        "colores":["humo",""," "],
+        "lugares":["humahuaca","honduras","holanda"],
+        "comidas":["helado","hamburguesa","huevos"],
+        "objetos":["hacha","hamaca","horquilla"]
     },
     {
         "letra":"i",
-        "nombres":"ignacio",
-        "animales":"iguana",
-        "colores":"indigo",
-        "lugares":"iguazu",
-        "comidas":"isla flotante",
-        "objetos":"imán"
+        "nombres":["ignacio","irene","ivan"],
+        "animales":["iguana","insecto",""],
+        "colores":["indigo","ivory",""],
+        "lugares":["iguazu","italia","india"],
+        "comidas":["isla flotante","infusion",""],
+        "objetos":["imán","impresora","interruptor"]
     },
     {
         "letra":"j",
-        "nombres":"joaquin",
-        "animales":"jirafa",
-        "colores":"jade",
-        "lugares":"jakarta",
-        "comidas":"jamon crudo",
-        "objetos":"juguete"
+        "nombres":["joaquin","julieta","javier"],
+        "animales":["jirafa","jabali",""],
+        "colores":["jade",""," "],
+        "lugares":["jakarta","japon","jerusalen"],
+        "comidas":["jamon crudo","jugo",""],
+        "objetos":["juguete","joya","jarron"]
     },
     {
         "letra":"k",
-        "nombres":"kevin",
-        "animales":"koala",
-        "colores":"kaki",
-        "lugares":"kiev",
-        "comidas":"kiwi",
-        "objetos":"kayac"
+        "nombres":["kevin","karina","kevin"],
+        "animales":["koala","kudu",""],
+        "colores":["kaki",""," "],
+        "lugares":["kiev","kenia","kioto"],
+        "comidas":["kiwi","ketchup",""],
+        "objetos":["kayac","ketchup",""]
     },
     {
         "letra":"l",
-        "nombres":"laura",
-        "animales":"lechuza",
-        "colores":"lapislazuli",
-        "lugares":"lisboa",
-        "comidas":"lechuga",
-        "objetos":"libro"
+        "nombres":["laura","luciano","lucia"],
+        "animales":["lechuza","leon","lobo"],
+        "colores":["lapislazuli","lila",""],
+        "lugares":["lisboa","londres","lima"],
+        "comidas":["lechuga","limon","lentejas"],
+        "objetos":["libro","lampara","llave"]
     },
     {
         "letra":"m",
-        "nombres":"manuel",
-        "animales":"mariposa",
-        "colores":"marfil",
-        "lugares":"mendoza",
-        "comidas":"manzana",
-        "objetos":"momia"
+        "nombres":["manuel","maria","matias"],
+        "animales":["mariposa","mono","murcielago"],
+        "colores":["marfil","magenta","marron"],
+        "lugares":["mendoza","mexico","marruecos"],
+        "comidas":["manzana","milanesa","mandarina"],
+        "objetos":["momia","mesa","mochila"]
     },
     {
         "letra":"n",
-        "nombres":"nicolas",
-        "animales":"nutria",
-        "colores":"negro",
-        "lugares":"nicaragua",
-        "comidas":"naranja",
-        "objetos":"nido"
+        "nombres":["nicolas","natalia","norberto"],
+        "animales":["nutria","narval",""],
+        "colores":["negro","naranja",""],
+        "lugares":["nicaragua","noruega","nepal"],
+        "comidas":["naranja","nueces",""],
+        "objetos":["nido","navaja",""]
     },
     {
         "letra":"o",
-        "nombres":"osvaldo",
-        "animales":"oca",
-        "colores":"ocre",
-        "lugares":"oslo",
-        "comidas":"oregano",
-        "objetos":"ovni"
+        "nombres":["osvaldo","olga","oscar"],
+        "animales":["oca","oso","oveja"],
+        "colores":["ocre","obsidiana",""],
+        "lugares":["oslo","oceania","olavarria"],
+        "comidas":["oregano","omelette",""],
+        "objetos":["ovni","olla","overol"]
     },
     {
         "letra":"p",
-        "nombres":"paula",
-        "animales":"paloma",
-        "colores":"plateado",
-        "lugares":"paris",
-        "comidas":"pollo",
-        "objetos":"peine"
+        "nombres":["paula","pablo","patricia"],
+        "animales":["paloma","pato","puma"],
+        "colores":["plateado","purpura","perla"],
+        "lugares":["paris","peru","portugal"],
+        "comidas":["pollo","pizza","papas"],
+        "objetos":["peine","paraguas","plato"]
     },
     {
         "letra":"q",
-        "nombres":"quique",
-        "animales":"quetzal",
-        "colores":"",
-        "lugares":"qatar",
-        "comidas":"quinoa",
-        "objetos":"quena"
+        "nombres":["quique","quimey",""],
+        "animales":["quetzal","quirquincho",""],
+        "colores":["",""," "],
+        "lugares":["qatar","quito",""],
+        "comidas":["quinoa","queso",""],
+        "objetos":["quena","quimono",""]
     },
     {
         "letra":"r",
-        "nombres":"rodolfo",
-        "animales":"rinoceronte",
-        "colores":"rosa",
-        "lugares":"rusia",
-        "comidas":"repollo",
-        "objetos":"rueda"
+        "nombres":["rodolfo","rosa","ricardo"],
+        "animales":["rinoceronte","raton","rana"],
+        "colores":["rosa","rojo",""],
+        "lugares":["rusia","rumania","roma"],
+        "comidas":["repollo","ravioles",""],
+        "objetos":["rueda","reloj","radio"]
     },
     {
         "letra":"s",
-        "nombres":"samuel",
-        "animales":"sardina",
-        "colores":"siena",
-        "lugares":"shangai",
-        "comidas":"sushi",
-        "objetos":"sombrilla"
+        "nombres":["samuel","sofia","santiago"],
+        "animales":["sardina","serpiente","salmon"],
+        "colores":["siena","salmon",""],
+        "lugares":["shangai","suiza","suecia"],
+        "comidas":["sushi","sopa","sandia"],
+        "objetos":["sombrilla","silla","sombrero"]
     },
     {
         "letra":"t",
-        "nombres":"tobias",
-        "animales":"tiburon",
-        "colores":"terracota",
-        "lugares":"tokio",
-        "comidas":"tallarines",
-        "objetos":"títere"
+        "nombres":["tobias","teresa","tomas"],
+        "animales":["tiburon","tigre","tortuga"],
+        "colores":["terracota","turquesa",""],
+        "lugares":["tokio","turquia","tailandia"],
+        "comidas":["tallarines","torta","te"],
+        "objetos":["títere","tenedor","telefono"]
     },
     {
         "letra":"u",
-        "nombres":"ulises",
-        "animales":"urraca",
-        "colores":"ultramar",
-        "lugares":"utah",
-        "comidas":"uva",
-        "objetos":"ukelele"
+        "nombres":["ulises","ursula",""],
+        "animales":["urraca","urogallo",""],
+        "colores":["ultramar",""," "],
+        "lugares":["utah","ucrania","uruguay"],
+        "comidas":["uva","uvas pasas",""],
+        "objetos":["ukelele","uniforme",""]
     },
     {
         "letra":"v",
-        "nombres":"victor",
-        "animales":"viuda negra",
-        "colores":"violeta",
-        "lugares":"viena",
-        "comidas":"vainilla",
-        "objetos":"vacuna"
+        "nombres":["victor","valentina","vicente"],
+        "animales":["viuda negra","vaca","vicuña"],
+        "colores":["violeta","verde",""],
+        "lugares":["viena","venezuela","vietnam"],
+        "comidas":["vainilla","vino",""],
+        "objetos":["vacuna","vaso","ventilador"]
     },
     {
         "letra":"w",
-        "nombres":"walter",
-        "animales":"wallaby",
-        "colores":"wengue",
-        "lugares":"winnipeg",
-        "comidas":"waffles",
-        "objetos":"walkman"
+        "nombres":["walter","wanda",""],
+        "animales":["wallaby","wombat",""],
+        "colores":["wengue",""," "],
+        "lugares":["winnipeg","washington",""],
+        "comidas":["waffles","wok",""],
+        "objetos":["walkman","whisky",""]
     },
     {
         "letra":"x",
-        "nombres":"xavier",
-        "animales":"xifosuro",
-        "colores":"",
-        "lugares":"Xi an",
-        "comidas":"",
-        "objetos":"xilofón"
+        "nombres":["xavier","ximena",""],
+        "animales":["xifosuro","",""],
+        "colores":["",""," "],
+        "lugares":["Xi an","xochimilco",""],
+        "comidas":["",""," "],
+        "objetos":["xilofón","",""]
     },
     {
         "letra":"y",
-        "nombres":"yasmin",
-        "animales":"yacaré",
-        "colores":"yeso",
-        "lugares":"yucatán",
-        "comidas":"yuca",
-        "objetos":"yunque"
+        "nombres":["yasmin","yolanda",""],
+        "animales":["yacaré","yaguarete",""],
+        "colores":["yeso",""," "],
+        "lugares":["yucatán","yakarta",""],
+        "comidas":["yuca","yogur",""],
+        "objetos":["yunque","yoyo",""]
     },
     {
         "letra":"z",
-        "nombres":"zoe",
-        "animales":"zarigueya",
-        "colores":"zafiro",
-        "lugares":"zanzibar",
-        "comidas":"zapallo",
-        "objetos":"zapato"
+        "nombres":["zoe","zacarias",""],
+        "animales":["zarigueya","zorro","zorzal"],
+        "colores":["zafiro",""," "],
+        "lugares":["zanzibar","zurich",""],
+        "comidas":["zapallo","zanahoria",""],
+        "objetos":["zapato","zapallo",""]
     }
 ]
-
