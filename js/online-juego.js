@@ -114,7 +114,9 @@ function actualizarTimer(finLimiteTimestamp) {
 }
 
 function escribirFilaHistorial(entrada, jugador1Nombre, jugador2Nombre, categorias) {
-    const celdasJugador = (jugada) => categorias.map(c => `<td>${jugada[c] || ""}</td>`).join("");
+    // Firebase omite objetos vacíos al guardar (ej. un jugador que no escribió nada),
+    // así que jugadaJugador1/2 puede llegar undefined en vez de {}.
+    const celdasJugador = (jugada) => categorias.map(c => `<td>${(jugada && jugada[c]) || ""}</td>`).join("");
 
     renglones.innerHTML += `
         <table class="tablaJuego">
