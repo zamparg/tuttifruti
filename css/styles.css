@@ -230,6 +230,22 @@ input:disabled {
   min-height: 45px;
 }
 
+#cuaderno,
+#renglones {
+  position: relative;
+  padding-left: 45px;
+}
+
+#cuaderno::before,
+#renglones::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 30px;
+  border-right: 7px double #d6a0bc;
+}
+
 .tablaJuego {
   width: 100%;
   border-collapse: collapse;
@@ -245,14 +261,88 @@ input:disabled {
   padding: 6px 4px;
 }
 
-.tablaJuego th:first-child,
-.tablaJuego td:first-child {
-  border-right: 7px double #d6a0bc;
-  width: 12%;
-}
-
 .tablaJuego th {
   font-family: 'Caveat Brush', cursive;
+}
+
+.tablaHistorial {
+  margin-bottom: 6px;
+}
+
+.tablaHistorial td:first-child {
+  width: 6%;
+  font-family: 'Caveat Brush', cursive;
+}
+
+.puntitoCelda {
+  display: block;
+  font-size: 12px;
+  color: #888;
+}
+
+.btnDisputar {
+  display: block;
+  margin: 2px auto 0;
+  font-size: 10px;
+  border: 1px solid #d6a0bc;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1px 6px;
+  cursor: pointer;
+  color: #d6a0bc;
+}
+
+.marcaDisputa {
+  display: block;
+  font-size: 11px;
+  color: #c99;
+  cursor: pointer;
+}
+
+.modalDisputa {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalDisputaContenido {
+  background: #ecf1f6;
+  border-radius: 15px;
+  padding: 20px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modalDisputaContenido textarea {
+  width: 100%;
+  min-height: 60px;
+  border-radius: 10px;
+  border: 2px solid #a0bcd6;
+  margin: 10px 0;
+  padding: 6px;
+}
+
+.modalDisputaBotones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.historialArgumentos {
+  max-height: 180px;
+  overflow-y: auto;
+  text-align: left;
+  margin: 10px 0;
 }
 
 .toastify {

@@ -74,6 +74,8 @@ async function confirmarConfig(codigo, quienSoy) {
     }
 }
 
+// letraOculta=true: crea la ronda con los datos ya calculados pero sin revelar la letra
+// hasta que ambos jugadores confirmen "Continuar" (ver confirmarContinuar).
 async function iniciarSiguienteRonda(codigo, sala) {
     const letrasUsadas = sala.historial ? Object.values(sala.historial).map(h => h.letra) : [];
     const letra = elegirLetraRonda(sala.config.poolLetras, letrasUsadas);
@@ -83,13 +85,14 @@ async function iniciarSiguienteRonda(codigo, sala) {
         return;
     }
 
-    const ahora = Date.now();
     const rondaActual = {
         numero: letrasUsadas.length + 1,
         letra,
-        inicioTimestamp: ahora,
-        finLimiteTimestamp: ahora + sala.config.timer * 1000,
-        estado: "en_curso",
+        revelada: false,
+        confirmadoContinuar: { p1: false, p2: false },
+        inicioTimestamp: null,
+        finLimiteTimestamp: null,
+        estado: "esperando_revelar",
         respuestas: {
             p1: { valores: {}, noHayPosibles: {}, finalizado: false, finalizadoEn: null },
             p2: { valores: {}, noHayPosibles: {}, finalizado: false, finalizadoEn: null }
@@ -100,6 +103,26 @@ async function iniciarSiguienteRonda(codigo, sala) {
         estado: "jugando",
         rondaActual
     });
+}
+
+// Cada jugador confirma que está listo para ver la letra nueva. Cuando ambos confirmaron,
+// recién ahí se revela la letra y arranca el timer (evita que alguien vea la letra antes que el otro).
+async function confirmarContinuar(codigo, quienSoy) {
+    await refSala(codigo).child(`rondaActual/confirmadoContinuar/${quienSoy}`).set(true);
+
+    const snapshot = await refSala(codigo).get();
+    const sala = snapshot.val();
+    const confirmado = sala.rondaActual.confirmadoContinuar;
+
+    if (confirmado.p1 && confirmado.p2 && !sala.rondaActual.revelada) {
+        const ahora = Date.now();
+        await refSala(codigo).child("rondaActual").update({
+            revelada: true,
+            estado: "en_curso",
+            inicioTimestamp: ahora,
+            finLimiteTimestamp: ahora + sala.config.timer * 1000
+        });
+    }
 }
 
 async function enviarRespuesta(codigo, quienSoy, valores, noHayPosibles) {
@@ -122,7 +145,7 @@ async function finalizarTurno(codigo, quienSoy, valores, noHayPosibles) {
 // Un jugador finalizado con al menos un "no hay posibles" deja el turno abierto para el rival.
 function turnoDebeCerrarse(rondaActual) {
     const { p1, p2 } = rondaActual.respuestas;
-    const ventencioTimer = Date.now() >= rondaActual.finLimiteTimestamp;
+    const ventencioTimer = rondaActual.finLimiteTimestamp && Date.now() >= rondaActual.finLimiteTimestamp;
 
     if (ventencioTimer) return true;
     if (p1.finalizado && p2.finalizado) return true;
@@ -136,7 +159,10 @@ function turnoDebeCerrarse(rondaActual) {
 }
 
 // Solo la llama el cliente creador (p1), protegido con una transacción sobre rondaActual/estado.
-async function calcularYCerrarRonda(codigo, sala) {
+// Relee la sala fresca desde Firebase justo antes de calcular: el "sala" que llega como parámetro
+// puede ser un snapshot desactualizado (ej. capturado antes de que llegara la última respuesta del rival),
+// y usar ese snapshot viejo hacía que el cálculo comparara contra respuestas vacías.
+async function calcularYCerrarRonda(codigo) {
     const rondaRef = refSala(codigo).child("rondaActual");
 
     const resultadoTransaccion = await rondaRef.child("estado").transaction(estadoActual => {
@@ -146,6 +172,8 @@ async function calcularYCerrarRonda(codigo, sala) {
 
     if (!resultadoTransaccion.committed) return;
 
+    const snapshotFresco = await refSala(codigo).get();
+    const sala = snapshotFresco.val();
     const rondaActual = sala.rondaActual;
     const { letra, respuestas } = rondaActual;
     const categorias = sala.config.categorias;
@@ -153,7 +181,7 @@ async function calcularYCerrarRonda(codigo, sala) {
     const jugada1 = respuestas.p1.valores || {};
     const jugada2 = respuestas.p2.valores || {};
 
-    const { puntosP1, puntosP2 } = calcularPuntosRonda(
+    const { puntosP1, puntosP2, detalle } = calcularPuntosRonda(
         jugada1, jugada2, letra, categorias,
         respuestas.p1.noHayPosibles, respuestas.p2.noHayPosibles
     );
@@ -162,6 +190,7 @@ async function calcularYCerrarRonda(codigo, sala) {
     const puntosTotalesP2 = (sala.jugadores.p2.puntosTotales || 0) + puntosP2;
 
     const entradaHistorial = new Jugada(letra, jugada1, puntosP1, puntosTotalesP1, jugada2, puntosP2, puntosTotalesP2);
+    entradaHistorial.detallePorCategoria = detalle;
 
     const numeroRonda = rondaActual.numero;
 
@@ -192,4 +221,103 @@ function guardarEnRanking(nombre, puntos, cantJugadas) {
     mejoresJugadores.push(new JugadorRankin(nombre, puntos, cantJugadas, promedio));
 
     localStorage.setItem("mejoresJugadores", JSON.stringify(mejoresJugadores));
+}
+
+// --- DISPUTAS ---
+// Cualquiera puede disputar una celda ya cerrada. Se guarda bajo historial/{indice}/disputas/{categoria}:
+// { iniciadaPor, causaAcusador, estado: "abierta"|"resuelta", turno: "p1"|"p2" (a quién le toca responder),
+//   argumentos: [{ autor, texto, tipo: "causa"|"aceptar"|"rechazar" }] }
+// Se resuelve cuando alguien "acepta" el argumento del otro: la palabra del que fue cuestionado
+// (o de quien aceptó que su palabra no vale) se invalida y se recalcula esa categoría.
+
+function refDisputa(codigo, indiceHistorial, categoria) {
+    return refSala(codigo).child(`historial/${indiceHistorial}/disputas/${categoria}`);
+}
+
+async function abrirDisputa(codigo, indiceHistorial, categoria, quienSoy, contraQuien, causa) {
+    await refDisputa(codigo, indiceHistorial, categoria).set({
+        iniciadaPor: quienSoy,
+        contraQuien,
+        estado: "abierta",
+        turno: contraQuien,
+        argumentos: [{ autor: quienSoy, tipo: "causa", texto: causa }]
+    });
+}
+
+async function responderDisputa(codigo, indiceHistorial, categoria, quienSoy, tipo, texto) {
+    const ref = refDisputa(codigo, indiceHistorial, categoria);
+    const snapshot = await ref.get();
+    const disputa = snapshot.val();
+    if (!disputa || disputa.estado !== "abierta") return;
+
+    const nuevosArgumentos = [...disputa.argumentos, { autor: quienSoy, tipo, texto: texto || "" }];
+    const otroJugador = quienSoy === "p1" ? "p2" : "p1";
+
+    if (tipo === "aceptar") {
+        // Quien acepta reconoce que SU palabra en esa categoría no vale.
+        await ref.update({
+            argumentos: nuevosArgumentos,
+            estado: "resuelta",
+            invalidadoJugador: quienSoy
+        });
+        await recalcularCategoriaTrasDisputa(codigo, indiceHistorial, categoria, quienSoy);
+    } else {
+        // Rechaza y contra-argumenta: el turno pasa al otro jugador, sin límite de intercambios.
+        await ref.update({
+            argumentos: nuevosArgumentos,
+            turno: otroJugador
+        });
+    }
+}
+
+async function recalcularCategoriaTrasDisputa(codigo, indiceHistorial, categoria, jugadorInvalidado) {
+    const salaSnapshot = await refSala(codigo).get();
+    const sala = salaSnapshot.val();
+    const entrada = sala.historial[indiceHistorial];
+
+    const jugada1 = { ...(entrada.jugadaJugador1 || {}) };
+    const jugada2 = { ...(entrada.jugadaJugador2 || {}) };
+
+    if (jugadorInvalidado === "p1") jugada1[categoria] = "";
+    else jugada2[categoria] = "";
+
+    const resultadoCategoria = calcularPuntoCategoria(jugada1[categoria], jugada2[categoria], entrada.letra, false, false);
+
+    const detalle = entrada.detallePorCategoria || {};
+    const anterior = detalle[categoria] || { p1: 0, p2: 0 };
+    detalle[categoria] = resultadoCategoria;
+
+    const nuevosPuntos1 = entrada.puntosJugador1 - anterior.p1 + resultadoCategoria.p1;
+    const nuevosPuntos2 = entrada.puntosJugador2 - anterior.p2 + resultadoCategoria.p2;
+
+    const diferencia1 = nuevosPuntos1 - entrada.puntosJugador1;
+    const diferencia2 = nuevosPuntos2 - entrada.puntosJugador2;
+
+    await refSala(codigo).update({
+        [`historial/${indiceHistorial}/jugadaJugador1/${categoria}`]: jugada1[categoria],
+        [`historial/${indiceHistorial}/jugadaJugador2/${categoria}`]: jugada2[categoria],
+        [`historial/${indiceHistorial}/puntosJugador1`]: nuevosPuntos1,
+        [`historial/${indiceHistorial}/puntosJugador2`]: nuevosPuntos2,
+        [`historial/${indiceHistorial}/detallePorCategoria`]: detalle,
+        [`historial/${indiceHistorial}/puntosTotalesJugador1`]: entrada.puntosTotalesJugador1 + diferencia1,
+        [`historial/${indiceHistorial}/puntosTotalesJugador2`]: entrada.puntosTotalesJugador2 + diferencia2,
+        "jugadores/p1/puntosTotales": sala.jugadores.p1.puntosTotales + diferencia1,
+        "jugadores/p2/puntosTotales": sala.jugadores.p2.puntosTotales + diferencia2
+    });
+
+    // Las rondas posteriores ya calcularon su puntosTotales acumulado sobre el valor viejo;
+    // se corrigen en cascada para que el acumulado siga siendo consistente.
+    const indices = Object.keys(sala.historial).map(Number).filter(i => i > indiceHistorial).sort((a, b) => a - b);
+    for (const indice of indices) {
+        const siguiente = sala.historial[indice];
+        await refSala(codigo).update({
+            [`historial/${indice}/puntosTotalesJugador1`]: siguiente.puntosTotalesJugador1 + diferencia1,
+            [`historial/${indice}/puntosTotalesJugador2`]: siguiente.puntosTotalesJugador2 + diferencia2
+        });
+    }
+}
+
+function hayDisputasAbiertas(entradaHistorial) {
+    if (!entradaHistorial || !entradaHistorial.disputas) return false;
+    return Object.values(entradaHistorial.disputas).some(d => d.estado === "abierta");
 }
