@@ -117,7 +117,8 @@ input {
   font-family: 'Caveat Brush', cursive;
   font-size: 20px;
   text-transform: capitalize;
-  width: 80%;
+  width: auto;
+  padding: 6px 20px;
   height: 40px;
   border-radius: 15px;
   background-color: #d6a0bc;
@@ -127,7 +128,8 @@ input {
   font-family: 'Caveat Brush', cursive;
   font-size: 20px;
   text-transform: capitalize;
-  width: 80%;
+  width: auto;
+  padding: 6px 20px;
   height: 40px;
   border-radius: 15px;
   background-color: #a0bcd6;
@@ -137,7 +139,8 @@ input {
   font-family: 'Caveat Brush', cursive;
   font-size: 20px;
   text-transform: capitalize;
-  width: 50%;
+  width: auto;
+  padding: 6px 20px;
   border-radius: 15px;
   background-color: #a0bcd6;
 }
@@ -146,15 +149,110 @@ input {
   font-family: 'Caveat Brush', cursive;
   font-size: 20px;
   text-transform: capitalize;
-  width: 50%;
+  width: auto;
+  padding: 6px 20px;
   height: 40px;
   border-radius: 15px;
   background-color: #a0bcd6;
-  margin-top: 10px;
 }
 
 input:disabled {
   background: #a0bcd6;
+}
+
+.grillaLetras {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.grillaLetras label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 34px;
+  font-family: 'Caveat Brush', cursive;
+}
+
+.listaCategorias {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.chipCategoria {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 2px solid #a0bcd6;
+  border-radius: 15px;
+  padding: 4px 10px;
+  font-family: 'Caveat Brush', cursive;
+}
+
+.chipCategoria .btnQuitarCategoria {
+  cursor: pointer;
+  color: #d6a0bc;
+  font-weight: bold;
+  border: none;
+  background: none;
+}
+
+.celdaRespuesta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 2px 0;
+}
+
+.celdaRespuesta .espacioInput {
+  width: 90%;
+}
+
+.celdaRespuesta label {
+  font-size: 12px;
+  font-family: 'Caveat Brush', cursive;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.renglon.renglonJuego {
+  height: auto;
+  min-height: 45px;
+}
+
+.tablaJuego {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.tablaJuego th,
+.tablaJuego td {
+  border-bottom: 2px solid #a0bcd6;
+  border-right: 2px solid #bcbcbc;
+  text-align: center;
+  vertical-align: middle;
+  padding: 6px 4px;
+}
+
+.tablaJuego th:first-child,
+.tablaJuego td:first-child {
+  border-right: 7px double #d6a0bc;
+  width: 12%;
+}
+
+.tablaJuego th {
+  font-family: 'Caveat Brush', cursive;
 }
 
 .toastify {

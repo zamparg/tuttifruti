@@ -24,15 +24,16 @@
         </div>
     </header>
     <main id="cuaderno">
-        <div class="renglon container-fluid row text-center" id="renglonCategorias">
-            <div class="col-1 margenIzquierdo"></div>
-        </div>
-
-        <form id="formRespuestas" autocomplete="off">
-            <div class="renglon container-fluid row text-center" id="filaJugador1">
-                <div class="col-1 margenIzquierdo" id="espacioJugador1"></div>
-            </div>
-        </form>
+        <table class="tablaJuego">
+            <thead>
+                <tr id="filaEncabezados"></tr>
+            </thead>
+            <tbody>
+                <tr id="filaRespuestas">
+                    <td id="espacioJugador1"></td>
+                </tr>
+            </tbody>
+        </table>
 
         <div class="renglon container-fluid row text-center">
             <div class="col-1 margenIzquierdo"></div>

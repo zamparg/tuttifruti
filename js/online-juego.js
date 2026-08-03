@@ -12,7 +12,6 @@ function avisos(aviso, duracion) {
 const codigo = sessionStorage.getItem("codigoSala");
 const quienSoy = sessionStorage.getItem("quienSoy");
 const nombreJugador = sessionStorage.getItem("nombreJugador");
-const rival = quienSoy === "p1" ? "p2" : "p1";
 
 if (!codigo || !quienSoy) {
     location.href = "../index.html";
@@ -20,41 +19,45 @@ if (!codigo || !quienSoy) {
 
 const espacioLetraRonda = document.getElementById("espacioLetraRonda");
 const espacioTimer = document.getElementById("espacioTimer");
-const renglonCategorias = document.getElementById("renglonCategorias");
-const filaJugador1 = document.getElementById("filaJugador1");
+const filaEncabezados = document.getElementById("filaEncabezados");
+const filaRespuestas = document.getElementById("filaRespuestas");
 const espacioJugador1 = document.getElementById("espacioJugador1");
 const btnFinalizar = document.getElementById("btnFinalizar");
 const renglones = document.getElementById("renglones");
 const puntajeTotal1 = document.getElementById("puntosJugador1");
 const puntajeTotal2 = document.getElementById("puntosJugador2");
 const renglonGanador = document.getElementById("renglonGanador");
-const margenInferior = document.getElementById("margenInferior");
 
 espacioJugador1.innerHTML = `<p class="jugador1">${nombreJugador}</p>`;
 
-let numeroRondaRenderizada = null;
+// Estado local de "qué ronda ya rendericé", para no reconstruir el formulario ni repetir
+// avisos cada vez que el listener de Firebase se dispara de nuevo por cualquier escritura.
+let numeroRondaEnPantalla = null;
+let avisoTiempoMostrado = false;
 let intervaloTimer = null;
-let botAlEjecutarLetra = null; // evita relanzar el bot para la misma ronda
-let ronditaCerrandoYaDisparada = null;
+let botYaLanzadoParaLetra = null;
+let calculoYaDisparadoParaRonda = null;
+let resultadoYaEscritoParaRonda = null;
+let siguienteRondaYaProgramada = null;
 
 function construirFormulario(categorias) {
-    renglonCategorias.innerHTML = `<div class="col-1 margenIzquierdo"></div>`;
+    filaEncabezados.innerHTML = `<th>Letra</th>`;
     for (const categoria of categorias) {
-        renglonCategorias.innerHTML += `<div class="col lineaDivisoria"><h2>${categoria}</h2></div>`;
+        filaEncabezados.innerHTML += `<th>${categoria}</th>`;
     }
-    renglonCategorias.innerHTML += `<div class="col"><h2>Puntos</h2></div>`;
+    filaEncabezados.innerHTML += `<th>Puntos</th>`;
 
-    filaJugador1.innerHTML = `<div class="col-1 margenIzquierdo" id="espacioJugador1"><p class="jugador1">${nombreJugador}</p></div>`;
+    filaRespuestas.innerHTML = `<td id="espacioJugador1"><p class="jugador1">${nombreJugador}</p></td>`;
     for (const categoria of categorias) {
-        filaJugador1.innerHTML += `
-            <div class="col lineaDivisoria espacio">
-                <input type="text" class="espacioInput" id="input_${categoria}">
-                <label>
-                    <input type="checkbox" id="noHay_${categoria}"> No hay posibles
-                </label>
-            </div>`;
+        filaRespuestas.innerHTML += `
+            <td>
+                <div class="celdaRespuesta">
+                    <input type="text" class="espacioInput" id="input_${categoria}">
+                    <label><input type="checkbox" id="noHay_${categoria}"> No hay posibles</label>
+                </div>
+            </td>`;
     }
-    filaJugador1.innerHTML += `<div class="col"></div>`;
+    filaRespuestas.innerHTML += `<td></td>`;
 
     for (const categoria of categorias) {
         document.getElementById(`noHay_${categoria}`).addEventListener("change", (e) => {
@@ -80,7 +83,7 @@ function leerRespuestasPropias(categorias) {
 }
 
 function deshabilitarFormulario() {
-    for (const input of filaJugador1.querySelectorAll("input")) {
+    for (const input of filaRespuestas.querySelectorAll("input")) {
         input.setAttribute("disabled", "disabled");
     }
     btnFinalizar.setAttribute("disabled", "disabled");
@@ -100,26 +103,36 @@ function actualizarTimer(finLimiteTimestamp) {
         const restanteMs = finLimiteTimestamp - Date.now();
         const restanteSeg = Math.max(0, Math.ceil(restanteMs / 1000));
         espacioTimer.textContent = `${restanteSeg}s`;
-        if (restanteSeg <= 0) clearInterval(intervaloTimer);
+        if (restanteSeg <= 0) {
+            clearInterval(intervaloTimer);
+            if (!avisoTiempoMostrado) {
+                avisoTiempoMostrado = true;
+                avisos("¡Se acabó el tiempo!", 3000);
+            }
+        }
     }, 250);
 }
 
 function escribirFilaHistorial(entrada, jugador1Nombre, jugador2Nombre, categorias) {
-    const celdasJugador = (jugada) => categorias.map(c => `<div class="col lineaDivisoria"><p>${jugada[c] || ""}</p></div>`).join("");
+    const celdasJugador = (jugada) => categorias.map(c => `<td>${jugada[c] || ""}</td>`).join("");
 
     renglones.innerHTML += `
-        <div class="renglon container-fluid row text-center">
-            <div class="col-1 margenIzquierdo"><p class="jugador1">${jugador1Nombre}:</p></div>
-            <div class="col lineaDivisoria"><p>${entrada.letra.toUpperCase()}</p></div>
-            ${celdasJugador(entrada.jugadaJugador1)}
-            <div class="col jugador1"><p>${entrada.puntosJugador1}</p></div>
-        </div>
-        <div class="renglon container-fluid row text-center">
-            <div class="col-1 margenIzquierdo"><p class="jugador2">${jugador2Nombre}:</p></div>
-            <div class="col lineaDivisoria"><p>${entrada.letra.toUpperCase()}</p></div>
-            ${celdasJugador(entrada.jugadaJugador2)}
-            <div class="col jugador2"><p>${entrada.puntosJugador2}</p></div>
-        </div>`;
+        <table class="tablaJuego">
+            <tbody>
+                <tr>
+                    <td><p class="jugador1">${jugador1Nombre}</p></td>
+                    <td>${entrada.letra.toUpperCase()}</td>
+                    ${celdasJugador(entrada.jugadaJugador1)}
+                    <td class="jugador1">${entrada.puntosJugador1}</td>
+                </tr>
+                <tr>
+                    <td><p class="jugador2">${jugador2Nombre}</p></td>
+                    <td>${entrada.letra.toUpperCase()}</td>
+                    ${celdasJugador(entrada.jugadaJugador2)}
+                    <td class="jugador2">${entrada.puntosJugador2}</td>
+                </tr>
+            </tbody>
+        </table>`;
 }
 
 function mostrarFinDePartida(sala) {
@@ -166,11 +179,12 @@ escucharSala(codigo, async (sala) => {
 
     const ronda = sala.rondaActual;
 
-    // Nueva ronda: reconstruir el formulario y arrancar el bot si corresponde.
-    if (ronda.numero !== numeroRondaRenderizada) {
-        numeroRondaRenderizada = ronda.numero;
-        ronditaCerrandoYaDisparada = null;
-        botAlEjecutarLetra = null;
+    // --- Nueva ronda: reconstruir el formulario una sola vez ---
+    if (ronda.numero !== numeroRondaEnPantalla) {
+        numeroRondaEnPantalla = ronda.numero;
+        avisoTiempoMostrado = false;
+        botYaLanzadoParaLetra = null;
+        calculoYaDisparadoParaRonda = null;
 
         espacioLetraRonda.textContent = ronda.letra.toUpperCase();
         avisos(`¡Vamos a jugar con la letra "${ronda.letra.toUpperCase()}"!`, 3000);
@@ -182,46 +196,50 @@ escucharSala(codigo, async (sala) => {
         actualizarTimer(ronda.finLimiteTimestamp);
     }
 
-    // Si el rival ya marcó su turno como cerrado antes que yo (perfecto sin no-hay-posibles), me deshabilita.
-    if (ronda.respuestas[quienSoy] && ronda.respuestas[quienSoy].finalizado) {
+    // Si mi turno ya está finalizado, o si el turno debe cerrarse por completo, deshabilito mi formulario.
+    const miTurnoFinalizado = ronda.respuestas[quienSoy] && ronda.respuestas[quienSoy].finalizado;
+    if ((miTurnoFinalizado || turnoDebeCerrarse(ronda)) && ronda.estado !== "cerrada") {
         deshabilitarFormulario();
     }
 
-    // Modo bot: el creador simula al jugador 2 localmente.
-    if (sala.modo === "bot" && quienSoy === "p1" && botAlEjecutarLetra !== ronda.letra) {
-        botAlEjecutarLetra = ronda.letra;
+    // Modo bot: el creador simula al jugador 2 localmente, una sola vez por letra.
+    if (sala.modo === "bot" && quienSoy === "p1" && botYaLanzadoParaLetra !== ronda.letra) {
+        botYaLanzadoParaLetra = ronda.letra;
         simularJugadaBot(codigo, ronda.letra, sala.config.categorias, sala.nivelBot, sala.config.timer);
     }
 
-    // Auto-envío al vencer el timer si todavía no finalicé.
-    const yaVencioTimer = Date.now() >= ronda.finLimiteTimestamp;
-    if (yaVencioTimer && ronda.respuestas[quienSoy] && !ronda.respuestas[quienSoy].finalizado) {
-        const { valores, noHayPosibles } = leerRespuestasPropias(sala.config.categorias);
-        await finalizarTurno(codigo, quienSoy, valores, noHayPosibles);
-        deshabilitarFormulario();
-    }
-
     // Solo el creador dispara el cálculo de puntos, una sola vez por ronda.
-    if (quienSoy === "p1" && ronda.estado === "en_curso" && turnoDebeCerrarse(ronda) && ronditaCerrandoYaDisparada !== ronda.numero) {
-        ronditaCerrandoYaDisparada = ronda.numero;
+    if (quienSoy === "p1" && ronda.estado === "en_curso" && turnoDebeCerrarse(ronda) && calculoYaDisparadoParaRonda !== ronda.numero) {
+        calculoYaDisparadoParaRonda = ronda.numero;
         await calcularYCerrarRonda(codigo, sala);
     }
 
-    if (ronda.estado === "cerrada") {
+    // --- Ronda cerrada: mostrar resultado y programar el avance, una sola vez por ronda ---
+    if (ronda.estado === "cerrada" && resultadoYaEscritoParaRonda !== ronda.numero) {
+        resultadoYaEscritoParaRonda = ronda.numero;
         clearInterval(intervaloTimer);
+        deshabilitarFormulario();
 
         const indiceHistorial = ronda.numero - 1;
         const entrada = sala.historial && sala.historial[indiceHistorial];
 
-        if (entrada && numeroRondaRenderizada === ronda.numero) {
-            numeroRondaRenderizada = null; // evita re-escribir la fila si vuelve a disparar el listener
+        if (entrada) {
             escribirFilaHistorial(entrada, sala.jugadores.p1.nombre, sala.jugadores.p2.nombre, sala.config.categorias);
             puntajeTotal1.innerHTML = `<p class="jugador1">${sala.jugadores.p1.nombre}: ${sala.jugadores.p1.puntosTotales} puntos.</p>`;
             puntajeTotal2.innerHTML = `<p class="jugador2">${sala.jugadores.p2.nombre}: ${sala.jugadores.p2.puntosTotales} puntos.</p>`;
 
-            if (quienSoy === "p1") {
-                setTimeout(() => avanzarSiguienteRonda(codigo), 3000);
+            if (entrada.puntosJugador1 > entrada.puntosJugador2) {
+                avisos(`¡Ganó la ronda ${sala.jugadores.p1.nombre}!`, 3000);
+            } else if (entrada.puntosJugador2 > entrada.puntosJugador1) {
+                avisos(`¡Ganó la ronda ${sala.jugadores.p2.nombre}!`, 3000);
+            } else {
+                avisos("¡Empate en la ronda!", 3000);
             }
+        }
+
+        if (quienSoy === "p1" && siguienteRondaYaProgramada !== ronda.numero) {
+            siguienteRondaYaProgramada = ronda.numero;
+            setTimeout(() => avanzarSiguienteRonda(codigo), 3000);
         }
     }
 });
