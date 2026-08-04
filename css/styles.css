@@ -69,6 +69,20 @@ p {
   height: 50%;
 }
 
+/* Igual que .renglon (mismo borde inferior), pero de altura libre para contenido que puede
+   envolver en varias líneas (ej. chips de categorías, grilla de letras). Usa la misma
+   estructura Bootstrap (col-1.margenIzquierdo + col) que el resto de filas del sitio, con
+   align-items: stretch para que la columna del margen se estire a la altura real del
+   contenido (por default el .row queda con align-content:center, que la colapsa). */
+.seccionLibre {
+  border-bottom: 2px solid #a0bcd6;
+  align-items: stretch;
+}
+
+.seccionLibre > .margenIzquierdo {
+  height: auto;
+}
+
 .margenIzquierdo {
   height: 100%;
   border-right: 7px double #d6a0bc;

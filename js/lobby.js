@@ -32,6 +32,10 @@ const textoCodigoGenerado = document.getElementById("textoCodigoGenerado");
 let detenerEscuchaSalaCreada = null;
 let codigoSalaCreadaPendiente = null;
 
+// Limpieza best-effort de salas abandonadas (sin actividad hace más de HORAS_ABANDONO_SALA horas),
+// corre en segundo plano cada vez que alguien abre el lobby. No bloquea la UI.
+limpiarSalasAbandonadas().catch(() => {});
+
 function mostrarPaso(paso) {
     pasoModo.style.display = "none";
     pasoMultijugador.style.display = "none";
@@ -114,7 +118,10 @@ formJugarBot.addEventListener("submit", async (e) => {
     const codigo = await crearSala(nombre, "bot");
     await refSala(codigo).update({
         nivelBot: nivel,
-        "jugadores/p2": { nombre: "PC", conectado: true, puntosTotales: 0 }
+        "jugadores/p2": { nombre: "PC", conectado: true, puntosTotales: 0 },
+        // La PC no tiene sesión propia que confirme la config, así que "siempre está lista".
+        "config/confirmadoPor/p2": true,
+        ultimaActividadGeneral: Date.now()
     });
 
     sessionStorage.setItem("codigoSala", codigo);

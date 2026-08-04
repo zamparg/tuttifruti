@@ -332,10 +332,12 @@ function mostrarBotonContinuar(sala, ronda) {
     const btnContinuar = document.getElementById("btnContinuar");
     const estadoContinuar = document.getElementById("estadoContinuar");
 
+    const esModoBot = sala.modo === "bot";
+
     if (hayDisputas) {
         btnContinuar.setAttribute("disabled", "disabled");
         estadoContinuar.textContent = "Hay una disputa sin resolver.";
-    } else if (ronda.confirmadoContinuar[quienSoy]) {
+    } else if (ronda.confirmadoContinuar[quienSoy] && !esModoBot) {
         btnContinuar.setAttribute("disabled", "disabled");
         estadoContinuar.textContent = "Esperando al rival...";
     } else {
@@ -402,8 +404,10 @@ escucharSala(codigo, async (sala) => {
         numeroRondaEnPantalla = null; // fuerza reconstrucción cuando se revele
         espacioLetraRonda.textContent = "?";
         espacioTimer.textContent = "";
-        filaEncabezados.innerHTML = "";
-        filaRespuestas.innerHTML = "";
+        // Se deja una celda vacía (en vez de la tabla totalmente vacía) para que el margen
+        // izquierdo tipo cuaderno (borde de la primera columna) siga dibujándose sin cortes.
+        filaEncabezados.innerHTML = `<th>&nbsp;</th>`;
+        filaRespuestas.innerHTML = `<td>&nbsp;</td>`;
         mostrarBotonContinuar(sala, ronda);
         return;
     }
@@ -474,9 +478,11 @@ escucharSala(codigo, async (sala) => {
 
         mostrarBotonContinuar(sala, ronda);
 
-        // Si ambos ya confirmaron continuar y no hay disputas abiertas, avanza a la ronda siguiente.
+        // Si ambos ya confirmaron continuar (en modo bot alcanza con p1, la PC no tiene sesión
+        // propia) y no hay disputas abiertas, avanza a la ronda siguiente.
         const entradaActual = sala.historial && sala.historial[indiceHistorial];
-        const ambosConfirmaron = ronda.confirmadoContinuar && ronda.confirmadoContinuar.p1 && ronda.confirmadoContinuar.p2;
+        const confirmado = ronda.confirmadoContinuar || {};
+        const ambosConfirmaron = sala.modo === "bot" ? confirmado.p1 : (confirmado.p1 && confirmado.p2);
         if (ambosConfirmaron && !hayDisputasAbiertas(entradaActual) && quienSoy === "p1") {
             await avanzarSiguienteRonda(codigo);
         }

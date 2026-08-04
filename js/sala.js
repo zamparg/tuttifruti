@@ -23,6 +23,7 @@ async function crearSala(nombreJugador1, modo) {
         estado: "configurando",
         modo: modo, // "online" | "bot"
         nivelBot: null,
+        ultimaActividadGeneral: Date.now(),
         jugadores: {
             p1: { nombre: nombreJugador1, conectado: true, puntosTotales: 0 }
         },
@@ -46,12 +47,36 @@ async function unirseSala(codigo, nombreJugador2) {
     if (sala.estado !== "configurando" && sala.estado !== "lobby") {
         throw new Error("Esa sala ya está jugando o finalizó.");
     }
-    await refSala(codigo).child("jugadores/p2").set({
-        nombre: nombreJugador2,
-        conectado: true,
-        puntosTotales: 0
+    await refSala(codigo).update({
+        "jugadores/p2": { nombre: nombreJugador2, conectado: true, puntosTotales: 0 },
+        ultimaActividadGeneral: Date.now()
     });
     return sala;
+}
+
+// Se actualiza en cada acción relevante del juego para saber si una sala sigue "viva".
+async function marcarActividadGeneral(codigo) {
+    await refSala(codigo).child("ultimaActividadGeneral").set(Date.now());
+}
+
+const HORAS_ABANDONO_SALA = 6;
+
+// Barre /salas y borra las que llevan más de HORAS_ABANDONO_SALA sin actividad. Se llama al
+// abrir el lobby (no requiere backend propio ni Cloud Functions, es limpieza "client-side").
+async function limpiarSalasAbandonadas() {
+    const snapshot = await db.ref("salas").get();
+    if (!snapshot.exists()) return;
+
+    const limite = Date.now() - HORAS_ABANDONO_SALA * 60 * 60 * 1000;
+    const salas = snapshot.val();
+
+    const borrados = Object.keys(salas).filter(codigo => {
+        const sala = salas[codigo];
+        const ultimaActividad = sala.ultimaActividadGeneral || 0;
+        return ultimaActividad < limite;
+    });
+
+    await Promise.all(borrados.map(codigo => db.ref(`salas/${codigo}`).remove()));
 }
 
 function escucharSala(codigo, callback) {
@@ -61,11 +86,18 @@ function escucharSala(codigo, callback) {
 }
 
 async function actualizarConfig(codigo, config) {
-    await refSala(codigo).child("config").update(config);
+    const actualizaciones = { ultimaActividadGeneral: Date.now() };
+    for (const clave of Object.keys(config)) {
+        actualizaciones[`config/${clave}`] = config[clave];
+    }
+    await refSala(codigo).update(actualizaciones);
 }
 
 async function confirmarConfig(codigo, quienSoy) {
-    await refSala(codigo).child(`config/confirmadoPor/${quienSoy}`).set(true);
+    await refSala(codigo).update({
+        [`config/confirmadoPor/${quienSoy}`]: true,
+        ultimaActividadGeneral: Date.now()
+    });
 
     const snapshot = await refSala(codigo).get();
     const sala = snapshot.val();
@@ -102,24 +134,28 @@ async function iniciarSiguienteRonda(codigo, sala) {
 
     await refSala(codigo).update({
         estado: "jugando",
-        rondaActual
+        rondaActual,
+        ultimaActividadGeneral: Date.now()
     });
 }
 
 // Cada jugador confirma que está listo para ver la letra nueva. Cuando ambos confirmaron,
 // recién ahí se revela la letra y arranca el timer (evita que alguien vea la letra antes que el otro).
+// En modo bot, la PC no tiene sesión propia que confirme, así que alcanza con que confirme p1.
 async function confirmarContinuar(codigo, quienSoy) {
     await refSala(codigo).child(`rondaActual/confirmadoContinuar/${quienSoy}`).set(true);
 
     const snapshot = await refSala(codigo).get();
     const sala = snapshot.val();
     const confirmado = sala.rondaActual.confirmadoContinuar;
+    const faltaConfirmarP2 = sala.modo !== "bot" && !confirmado.p2;
 
-    if (confirmado.p1 && confirmado.p2 && !sala.rondaActual.revelada) {
-        await refSala(codigo).child("rondaActual").update({
-            revelada: true,
-            estado: "en_curso",
-            ultimaActividadTimestamp: Date.now()
+    if (confirmado.p1 && !faltaConfirmarP2 && !sala.rondaActual.revelada) {
+        await refSala(codigo).update({
+            "rondaActual/revelada": true,
+            "rondaActual/estado": "en_curso",
+            "rondaActual/ultimaActividadTimestamp": Date.now(),
+            ultimaActividadGeneral: Date.now()
         });
     }
 }
@@ -130,7 +166,8 @@ async function enviarRespuesta(codigo, quienSoy, valores, noHayPosibles) {
     await refSala(codigo).update({
         [`rondaActual/respuestas/${quienSoy}/valores`]: valores,
         [`rondaActual/respuestas/${quienSoy}/noHayPosibles`]: noHayPosibles,
-        "rondaActual/ultimaActividadTimestamp": Date.now()
+        "rondaActual/ultimaActividadTimestamp": Date.now(),
+        ultimaActividadGeneral: Date.now()
     });
 }
 
@@ -139,7 +176,8 @@ async function finalizarTurno(codigo, quienSoy, valores, noHayPosibles) {
         [`rondaActual/respuestas/${quienSoy}/valores`]: valores,
         [`rondaActual/respuestas/${quienSoy}/noHayPosibles`]: noHayPosibles,
         [`rondaActual/respuestas/${quienSoy}/finalizado`]: true,
-        [`rondaActual/respuestas/${quienSoy}/finalizadoEn`]: Date.now()
+        [`rondaActual/respuestas/${quienSoy}/finalizadoEn`]: Date.now(),
+        ultimaActividadGeneral: Date.now()
     });
 }
 
@@ -209,7 +247,8 @@ async function calcularYCerrarRonda(codigo) {
         [`historial/${numeroRonda - 1}`]: entradaHistorial,
         "jugadores/p1/puntosTotales": puntosTotalesP1,
         "jugadores/p2/puntosTotales": puntosTotalesP2,
-        "rondaActual/estado": "cerrada"
+        "rondaActual/estado": "cerrada",
+        ultimaActividadGeneral: Date.now()
     });
 }
 
@@ -220,7 +259,10 @@ async function avanzarSiguienteRonda(codigo) {
 }
 
 async function finalizarPartida(codigo) {
-    await refSala(codigo).update({ estado: "finalizado" });
+    await refSala(codigo).update({
+        estado: "finalizado",
+        ultimaActividadGeneral: Date.now()
+    });
 }
 
 function guardarEnRanking(nombre, puntos, cantJugadas) {
@@ -253,6 +295,7 @@ async function abrirDisputa(codigo, indiceHistorial, categoria, quienSoy, contra
         turno: contraQuien,
         argumentos: [{ autor: quienSoy, tipo: "causa", texto: causa }]
     });
+    await marcarActividadGeneral(codigo);
 }
 
 async function responderDisputa(codigo, indiceHistorial, categoria, quienSoy, tipo, texto) {
