@@ -53,8 +53,7 @@ formCrearSala.addEventListener("submit", async (e) => {
         sessionStorage.setItem("quienSoy", "p1");
         sessionStorage.setItem("nombreJugador", nombre);
 
-        formCrearSala.style.display = "none";
-        formUnirseSala.style.display = "none";
+        pasoMultijugador.style.display = "none";
         textoCodigoGenerado.textContent = codigo;
         codigoGenerado.style.display = "";
 

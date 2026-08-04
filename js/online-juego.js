@@ -39,6 +39,11 @@ let calculoYaDisparadoParaRonda = null;
 let autoFinalizadoParaRonda = null;
 let resultadoYaEscritoParaRonda = null;
 
+// Debounce corto para no escribir en Firebase en cada tecla individual, sin perder la regla de
+// "cualquier tecla resetea el timer a 60": el reseteo del timer ocurre igual en cada evento local
+// (ver actualizarTimerLocalPorEscritura), solo el guardado en Firebase se agrupa.
+let debounceGuardado = null;
+
 function construirFormulario(categorias) {
     filaEncabezados.innerHTML = `<th>Letra</th>`;
     for (const categoria of categorias) {
@@ -59,18 +64,34 @@ function construirFormulario(categorias) {
     filaRespuestas.innerHTML += `<td id="celdaBotonFinalizar"><button id="btnFinalizar" class="btn boton1">Finalizar</button></td>`;
 
     for (const categoria of categorias) {
-        document.getElementById(`noHay_${categoria}`).addEventListener("change", (e) => {
-            const input = document.getElementById(`input_${categoria}`);
+        const input = document.getElementById(`input_${categoria}`);
+        const noHay = document.getElementById(`noHay_${categoria}`);
+
+        input.addEventListener("input", onEscribirRespuesta);
+
+        noHay.addEventListener("change", (e) => {
             if (e.target.checked) {
                 input.value = "";
                 input.setAttribute("disabled", "disabled");
             } else {
                 input.removeAttribute("disabled");
             }
+            onEscribirRespuesta();
         });
     }
 
     document.getElementById("btnFinalizar").onclick = onClickFinalizar;
+}
+
+function onEscribirRespuesta() {
+    clearTimeout(debounceGuardado);
+    debounceGuardado = setTimeout(async () => {
+        const snapshot = await refSala(codigo).get();
+        const sala = snapshot.val();
+        if (!sala || !sala.rondaActual || sala.rondaActual.estado !== "en_curso") return;
+        const { valores, noHayPosibles } = leerRespuestasPropias(sala.config.categorias);
+        await enviarRespuesta(codigo, quienSoy, valores, noHayPosibles);
+    }, 400);
 }
 
 function leerRespuestasPropias(categorias) {
@@ -101,17 +122,25 @@ async function onClickFinalizar() {
     deshabilitarFormulario();
 }
 
-function actualizarTimer(finLimiteTimestamp) {
+// TIMER_SEGUNDOS_INACTIVIDAD ya está definida en sala.js (cargado antes que este script).
+// El timer no es una cuenta regresiva fija: mide inactividad desde la última tecla presionada por
+// CUALQUIERA de los dos jugadores (ultimaActividadTimestamp, compartido por Firebase). Mientras
+// alguien escribe ese timestamp se actualiza (ver enviarRespuesta en sala.js) y el timer vuelve a 60.
+let ultimaActividadConocida = null;
+
+function actualizarTimer(ultimaActividadTimestamp) {
+    ultimaActividadConocida = ultimaActividadTimestamp;
     clearInterval(intervaloTimer);
     intervaloTimer = setInterval(async () => {
-        const restanteMs = finLimiteTimestamp - Date.now();
-        const restanteSeg = Math.max(0, Math.ceil(restanteMs / 1000));
+        const base = ultimaActividadConocida || Date.now();
+        const transcurridoSeg = (Date.now() - base) / 1000;
+        const restanteSeg = Math.max(0, Math.ceil(TIMER_SEGUNDOS_INACTIVIDAD - transcurridoSeg));
         espacioTimer.textContent = `${restanteSeg}s`;
         if (restanteSeg <= 0) {
             clearInterval(intervaloTimer);
             if (!avisoTiempoMostrado) {
                 avisoTiempoMostrado = true;
-                avisos("¡Se acabó el tiempo!", 3000);
+                avisos("¡Nadie escribió a tiempo!", 3000);
             }
 
             // Auto-envío de lo que tenga tipeado si todavía no finalicé, una sola vez.
@@ -133,10 +162,13 @@ function actualizarTimer(finLimiteTimestamp) {
 
 function celdaConPuntaje(valor, puntos, categoria, indiceHistorial, quienEsElDeLaCelda, disputa) {
     const puntosTexto = puntos !== undefined ? `<span class="puntitoCelda">${puntos}</span>` : "";
-    const puedeDisputar = valor && !disputa;
+    // Solo se puede disputar la palabra del RIVAL, nunca la propia (no tiene sentido discutirse a uno mismo).
+    const esPalabraRival = quienEsElDeLaCelda !== quienSoy;
+    const puedeDisputar = valor && !disputa && esPalabraRival;
     const botonDisputar = puedeDisputar
         ? `<button type="button" class="btnDisputar" data-cat="${categoria}" data-indice="${indiceHistorial}" data-contra="${quienEsElDeLaCelda}">discutir</button>`
         : "";
+    // La marca de "en disputa" se replica en ambas celdas (propia y rival) para que los dos vean el estado.
     const marcaDisputa = disputa ? `<span class="marcaDisputa" data-cat="${categoria}" data-indice="${indiceHistorial}">⚠ en disputa</span>` : "";
     return `<td>${valor || ""} ${puntosTexto}${botonDisputar}${marcaDisputa}</td>`;
 }
@@ -347,7 +379,10 @@ function mostrarFinDePartida(sala) {
             </div>
         </div>`;
 
-    document.getElementById("cuaderno").style.display = "none";
+    // Se oculta solo la tabla de la última ronda en curso (ya no aplica), pero se deja visible
+    // el historial completo en #renglones para que se sigan viendo todas las categorías jugadas.
+    const tabla = document.querySelector("#cuaderno .tablaJuego");
+    if (tabla) tabla.style.display = "none";
 }
 
 escucharSala(codigo, async (sala) => {
@@ -387,7 +422,10 @@ escucharSala(codigo, async (sala) => {
         avisos(`¡Vamos a jugar con la letra "${ronda.letra.toUpperCase()}"!`, 3000);
 
         construirFormulario(sala.config.categorias);
-        actualizarTimer(ronda.finLimiteTimestamp);
+        actualizarTimer(ronda.ultimaActividadTimestamp);
+    } else {
+        // Misma ronda: el rival puede haber escrito y reseteado el timer sin que yo reconstruya nada.
+        ultimaActividadConocida = ronda.ultimaActividadTimestamp;
     }
 
     // Si mi turno ya está finalizado, o si el turno debe cerrarse por completo, deshabilito mi formulario.
@@ -397,9 +435,10 @@ escucharSala(codigo, async (sala) => {
     }
 
     // Modo bot: el creador simula al jugador 2 localmente, una sola vez por letra.
+    // TIMER_SEGUNDOS_INACTIVIDAD (60) como escala de referencia para los delays del bot.
     if (sala.modo === "bot" && quienSoy === "p1" && botYaLanzadoParaLetra !== ronda.letra) {
         botYaLanzadoParaLetra = ronda.letra;
-        simularJugadaBot(codigo, ronda.letra, sala.config.categorias, sala.nivelBot, sala.config.timer);
+        simularJugadaBot(codigo, ronda.letra, sala.config.categorias, sala.nivelBot, TIMER_SEGUNDOS_INACTIVIDAD);
     }
 
     // Solo el creador dispara el cálculo de puntos, una sola vez por ronda.

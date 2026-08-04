@@ -90,8 +90,9 @@ async function iniciarSiguienteRonda(codigo, sala) {
         letra,
         revelada: false,
         confirmadoContinuar: { p1: false, p2: false },
-        inicioTimestamp: null,
-        finLimiteTimestamp: null,
+        // El timer NO es una cuenta regresiva fija: se mide como inactividad desde la última tecla
+        // presionada por CUALQUIERA de los dos jugadores. Mientras alguien escribe, se resetea a 60s.
+        ultimaActividadTimestamp: null,
         estado: "esperando_revelar",
         respuestas: {
             p1: { valores: {}, noHayPosibles: {}, finalizado: false, finalizadoEn: null },
@@ -115,39 +116,49 @@ async function confirmarContinuar(codigo, quienSoy) {
     const confirmado = sala.rondaActual.confirmadoContinuar;
 
     if (confirmado.p1 && confirmado.p2 && !sala.rondaActual.revelada) {
-        const ahora = Date.now();
         await refSala(codigo).child("rondaActual").update({
             revelada: true,
             estado: "en_curso",
-            inicioTimestamp: ahora,
-            finLimiteTimestamp: ahora + sala.config.timer * 1000
+            ultimaActividadTimestamp: Date.now()
         });
     }
 }
 
+// Se llama en cada tecla presionada en cualquier categoría: guarda el valor y resetea el timer de
+// inactividad a 60s para ambos jugadores (regla: si alguien escribe, el timer vuelve a 60).
 async function enviarRespuesta(codigo, quienSoy, valores, noHayPosibles) {
-    await refSala(codigo).child(`rondaActual/respuestas/${quienSoy}`).update({
-        valores,
-        noHayPosibles
+    await refSala(codigo).update({
+        [`rondaActual/respuestas/${quienSoy}/valores`]: valores,
+        [`rondaActual/respuestas/${quienSoy}/noHayPosibles`]: noHayPosibles,
+        "rondaActual/ultimaActividadTimestamp": Date.now()
     });
 }
 
 async function finalizarTurno(codigo, quienSoy, valores, noHayPosibles) {
-    await refSala(codigo).child(`rondaActual/respuestas/${quienSoy}`).update({
-        valores,
-        noHayPosibles,
-        finalizado: true,
-        finalizadoEn: Date.now()
+    await refSala(codigo).update({
+        [`rondaActual/respuestas/${quienSoy}/valores`]: valores,
+        [`rondaActual/respuestas/${quienSoy}/noHayPosibles`]: noHayPosibles,
+        [`rondaActual/respuestas/${quienSoy}/finalizado`]: true,
+        [`rondaActual/respuestas/${quienSoy}/finalizadoEn`]: Date.now()
     });
+}
+
+const TIMER_SEGUNDOS_INACTIVIDAD = 60;
+
+// Segundos restantes antes de que el timer llegue a 0 por inactividad. Ambos clientes lo calculan
+// igual a partir de ultimaActividadTimestamp (compartido), así ven el mismo número.
+function segundosRestantesPorInactividad(rondaActual) {
+    if (!rondaActual.ultimaActividadTimestamp) return TIMER_SEGUNDOS_INACTIVIDAD;
+    const transcurrido = (Date.now() - rondaActual.ultimaActividadTimestamp) / 1000;
+    return Math.max(0, TIMER_SEGUNDOS_INACTIVIDAD - transcurrido);
 }
 
 // Un jugador finalizado sin ningún "no hay posibles" cierra el turno para ambos de inmediato.
 // Un jugador finalizado con al menos un "no hay posibles" deja el turno abierto para el rival.
 function turnoDebeCerrarse(rondaActual) {
     const { p1, p2 } = rondaActual.respuestas;
-    const ventencioTimer = rondaActual.finLimiteTimestamp && Date.now() >= rondaActual.finLimiteTimestamp;
 
-    if (ventencioTimer) return true;
+    if (segundosRestantesPorInactividad(rondaActual) <= 0) return true;
     if (p1.finalizado && p2.finalizado) return true;
 
     const tieneNoHayPosibles = (jugador) => Object.values(jugador.noHayPosibles || {}).some(v => v);

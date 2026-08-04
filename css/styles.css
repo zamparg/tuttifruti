@@ -230,22 +230,6 @@ input:disabled {
   min-height: 45px;
 }
 
-#cuaderno,
-#renglones {
-  position: relative;
-  padding-left: 45px;
-}
-
-#cuaderno::before,
-#renglones::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 30px;
-  border-right: 7px double #d6a0bc;
-}
-
 .tablaJuego {
   width: 100%;
   border-collapse: collapse;
@@ -265,13 +249,16 @@ input:disabled {
   font-family: 'Caveat Brush', cursive;
 }
 
-.tablaHistorial {
-  margin-bottom: 6px;
+/* Mismo margen izquierdo tipo cuaderno que .margenIzquierdo (col-1), aplicado a la primera
+   columna de las tablas de juego para que todas las pantallas compartan un único criterio. */
+.tablaJuego th:first-child,
+.tablaJuego td:first-child {
+  border-right: 7px double #d6a0bc;
+  width: 8.33%;
 }
 
-.tablaHistorial td:first-child {
-  width: 6%;
-  font-family: 'Caveat Brush', cursive;
+.tablaHistorial {
+  margin-bottom: 6px;
 }
 
 .puntitoCelda {
