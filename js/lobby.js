@@ -21,17 +21,23 @@ const btnVolverDeMultijugador = document.getElementById("btnVolverDeMultijugador
 const btnVolverDeBot = document.getElementById("btnVolverDeBot");
 const btnVolverDeUnirse = document.getElementById("btnVolverDeUnirse");
 
+const btnVolverDeCodigoGenerado = document.getElementById("btnVolverDeCodigoGenerado");
+
 const formCrearSala = document.getElementById("formCrearSala");
 const formUnirseSala = document.getElementById("formUnirseSala");
 const formJugarBot = document.getElementById("formJugarBot");
 const codigoGenerado = document.getElementById("codigoGenerado");
 const textoCodigoGenerado = document.getElementById("textoCodigoGenerado");
 
+let detenerEscuchaSalaCreada = null;
+let codigoSalaCreadaPendiente = null;
+
 function mostrarPaso(paso) {
     pasoModo.style.display = "none";
     pasoMultijugador.style.display = "none";
     pasoBot.style.display = "none";
     pasoUnirse.style.display = "none";
+    codigoGenerado.style.display = "none";
     paso.style.display = "";
 }
 
@@ -54,12 +60,13 @@ formCrearSala.addEventListener("submit", async (e) => {
         sessionStorage.setItem("nombreJugador", nombre);
 
         pasoMultijugador.style.display = "none";
-        textoCodigoGenerado.textContent = codigo;
         codigoGenerado.style.display = "";
+        textoCodigoGenerado.textContent = codigo;
+        codigoSalaCreadaPendiente = codigo;
 
-        const detener = escucharSala(codigo, (sala) => {
+        detenerEscuchaSalaCreada = escucharSala(codigo, (sala) => {
             if (sala && sala.jugadores && sala.jugadores.p2) {
-                detener();
+                detenerEscuchaSalaCreada();
                 location.href = "pages/online-config.html";
             }
         });
@@ -67,6 +74,19 @@ formCrearSala.addEventListener("submit", async (e) => {
         avisos(error.message, 3000);
     }
 });
+
+btnVolverDeCodigoGenerado.onclick = async () => {
+    if (detenerEscuchaSalaCreada) {
+        detenerEscuchaSalaCreada();
+        detenerEscuchaSalaCreada = null;
+    }
+    if (codigoSalaCreadaPendiente) {
+        await refSala(codigoSalaCreadaPendiente).remove();
+        codigoSalaCreadaPendiente = null;
+    }
+    codigoGenerado.style.display = "none";
+    mostrarPaso(pasoModo);
+};
 
 formUnirseSala.addEventListener("submit", async (e) => {
     e.preventDefault();
